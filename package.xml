@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>linalg3d</name>
+  <version>0.1.0</version>
+  <description>Simple Linear Math for 3d calculations in CPP</description>
+  <maintainer email="pavelguzenfeld@gmail.com">Pavel Guzenfeld</maintainer>
+  <license>MIT</license>
+  <build_depend>libfmt-dev</build_depend>
+  <build_depend>cmake-library</build_depend>
+</package>
