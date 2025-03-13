@@ -20,14 +20,14 @@ void test_angle()
     // Radians to Degrees
     {
         Angle<AngleType::RADIANS> a(M_PI);
-        assert_near(a.to_degrees(), 180.0);
+        assert_near(a.to_degrees().value(), 180.0);
         fmt::print("✅ Radians to degrees\n");
     }
 
     // Degrees to Radians
     {
         Angle<AngleType::DEGREES> a(180.0);
-        assert_near(a.to_radians(), M_PI);
+        assert_near(a.to_radians().value(), M_PI);
         fmt::print("✅ Degrees to radians\n");
     }
 }
