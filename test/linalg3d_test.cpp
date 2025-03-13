@@ -11,6 +11,27 @@ inline void assert_near(double actual, double expected, double tolerance = EPSIL
     assert(std::fabs(actual - expected) < tolerance && "Floating-point values are not close enough");
 }
 
+void test_angle()
+{
+    using namespace linalg3d;
+
+    fmt::print("Running Angle tests...\n");
+
+    // Radians to Degrees
+    {
+        Angle<AngleType::RADIANS> a(M_PI);
+        assert_near(a.to_degrees(), 180.0);
+        fmt::print("✅ Radians to degrees\n");
+    }
+
+    // Degrees to Radians
+    {
+        Angle<AngleType::DEGREES> a(180.0);
+        assert_near(a.to_radians(), M_PI);
+        fmt::print("✅ Degrees to radians\n");
+    }
+}
+
 void test_vector3()
 {
     using namespace linalg3d;
@@ -360,7 +381,7 @@ void test_euler_angles()
 
     // Default Constructor
     {
-        EulerAngles e;
+        EulerAngles<AngleType::RADIANS> e;
         assert(e.pitch == 0.0 && e.yaw == 0.0 && e.roll == 0.0);
         fmt::print("✅ Default constructor\n");
     }
@@ -494,9 +515,9 @@ void test_operations()
     {
         Quaternion q(0.983347, 0.034270, 0.106020, 0.143572);
         EulerAngles e = fromQuaternion(q);
-        assert_near(e.pitch, 1.0);
-        assert_near(e.yaw, 2.0);
-        assert_near(e.roll, 3.0);
+        assert_near(e.pitch.value(), 1.0);
+        assert_near(e.yaw.value(), 2.0);
+        assert_near(e.roll.value(), 3.0);
         fmt::print("✅ Euler angles from quaternion\n");
     }
 
@@ -534,6 +555,7 @@ void test_operations()
 
 int main()
 {
+    test_angle();
     test_vector3();
     test_vector3_operators();
     test_vector3_compare_operators();
