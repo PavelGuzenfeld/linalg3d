@@ -26,16 +26,16 @@ namespace linalg3d
             2.0 * (xz - wy), 2.0 * (yz + wx), 1.0 - 2.0 * (xx + yy)};
     }
 
-    [[nodiscard]] constexpr EulerAngles fromQuaternion(const Quaternion &q) noexcept
+    [[nodiscard]] constexpr EulerAngles<AngleType::RADIANS> fromQuaternion(const Quaternion &q) noexcept
     {
-        return EulerAngles(
+        return EulerAngles<AngleType::RADIANS>{
             std::atan2(2.0 * (q.w * q.x + q.y * q.z), 1.0 - 2.0 * (q.x * q.x + q.y * q.y)), // Pitch
             std::atan2(2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z)), // Yaw
             std::asin(std::clamp(2.0 * (q.w * q.y - q.z * q.x), -1.0, 1.0))                 // Roll
-        );
+        };
     }
-    
-    [[nodiscard]] constexpr Quaternion fromEulerAngles(const EulerAngles &angles) noexcept
+
+    [[nodiscard]] constexpr Quaternion fromEulerAngles(EulerAngles<AngleType::RADIANS> &angles) noexcept
     {
         double cy = std::cos(angles.yaw * 0.5);
         double sy = std::sin(angles.yaw * 0.5);
