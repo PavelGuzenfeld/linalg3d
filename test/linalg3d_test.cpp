@@ -14,21 +14,104 @@ inline void assert_near(double actual, double expected, double tolerance = EPSIL
 void test_angle()
 {
     using namespace linalg3d;
-
     fmt::print("Running Angle tests...\n");
 
-    // Radians to Degrees
+    // Radians to Degrees conversion
     {
-        Angle<AngleType::RADIANS> a(M_PI);
-        assert_near(a.to_degrees().value(), 180.0);
-        fmt::print("✅ Radians to degrees\n");
+        Angle<AngleType::RADIANS> radAngle(M_PI);
+        auto degAngle = radAngle.to_degrees();
+        assert_near(degAngle.value(), 180.0);
+        fmt::print("✅ Radians to degrees: {} rad -> {}°\n", radAngle.value(), degAngle.value());
     }
 
-    // Degrees to Radians
+    // Degrees to Radians conversion
     {
-        Angle<AngleType::DEGREES> a(180.0);
-        assert_near(a.to_radians().value(), M_PI);
-        fmt::print("✅ Degrees to radians\n");
+        Angle<AngleType::DEGREES> degAngle(180.0);
+        auto radAngle = degAngle.to_radians();
+        assert_near(radAngle.value(), M_PI);
+        fmt::print("✅ Degrees to radians: {}° -> {} rad\n", degAngle.value(), radAngle.value());
+    }
+
+    // Identity conversion: Radians -> Degrees -> Radians
+    {
+        Angle<AngleType::RADIANS> radOrig(M_PI / 4.0);
+        auto deg = radOrig.to_degrees();
+        auto radAgain = deg.to_radians();
+        assert_near(radOrig.value(), radAgain.value());
+        fmt::print("✅ Identity conversion (rad->deg->rad): {} -> {} -> {}\n", radOrig.value(), deg.value(), radAgain.value());
+    }
+
+    // Test trigonometric functions at specific angles (radians)
+    {
+        Angle<AngleType::RADIANS> zero(0.0);
+        assert_near(zero.sin(), 0.0);
+        assert_near(zero.cos(), 1.0);
+        assert_near(zero.tan(), 0.0);
+        fmt::print("✅ Trigonometric functions at 0 radians\n");
+
+        Angle<AngleType::RADIANS> halfPi(M_PI / 2.0);
+        assert_near(halfPi.sin(), 1.0);
+        // cos(π/2) should be 0; note that due to FP rounding it might be very small.
+        assert_near(halfPi.cos(), 0.0);
+        fmt::print("✅ Trigonometric functions at π/2 radians (sin, cos)\n");
+    }
+
+    // Test negative angle conversion
+    {
+        Angle<AngleType::DEGREES> negDeg(-45.0);
+        auto negRad = negDeg.to_radians();
+        assert_near(negRad.value(), -M_PI / 4.0);
+        fmt::print("✅ Negative angle conversion: {}° -> {} rad\n", negDeg.value(), negRad.value());
+    }
+
+    // Test periodicity/wrap-around: 360° -> 2π rad
+    {
+        Angle<AngleType::DEGREES> fullCircle(360.0);
+        auto radFull = fullCircle.to_radians();
+        assert_near(radFull.value(), 2 * M_PI);
+        fmt::print("✅ 360° conversion: {}° -> {} rad\n", fullCircle.value(), radFull.value());
+    }
+
+    // Test operator overloads: addition, subtraction, multiplication, and division.
+    {
+        Angle<AngleType::RADIANS> a(M_PI / 3.0); // 60°
+        Angle<AngleType::RADIANS> b(M_PI / 6.0); // 30°
+        auto sum = a + b;                        // Expect 90° or π/2 rad.
+        auto diff = a - b;                       // Expect 30° or π/6 rad.
+        assert_near(sum.value(), M_PI / 2.0);
+        assert_near(diff.value(), M_PI / 6.0);
+        fmt::print("✅ Operator overloads (addition/subtraction): {} + {} = {}, {} - {} = {}\n",
+                   a.value(), b.value(), sum.value(), a.value(), b.value(), diff.value());
+
+        // Multiplication and division operators.
+        double scalar = 2.0;
+        double prod = a * scalar;
+        double div = a / scalar;
+        assert_near(prod, (M_PI / 3.0) * 2.0);
+        assert_near(div, (M_PI / 3.0) / 2.0);
+        fmt::print("✅ Operator overloads (multiplication/division): {} * {} = {}, {} / {} = {}\n",
+                   a.value(), scalar, prod, a.value(), scalar, div);
+    }
+
+    // Test equality and comparisons.
+    {
+        Angle<AngleType::RADIANS> a(M_PI / 2.0);
+        Angle<AngleType::RADIANS> b(M_PI / 2.0);
+        Angle<AngleType::RADIANS> c(M_PI / 3.0);
+        assert(a == M_PI / 2.0);
+        assert(a == b.value());
+        assert(a != c.value());
+        assert(c < a.value());
+        fmt::print("✅ Equality and comparison operators\n");
+    }
+
+    // Test static conversion helpers
+    {
+        auto fromRad = Angle<AngleType::RADIANS>::from_radians(M_PI / 2.0);
+        auto fromDeg = Angle<AngleType::DEGREES>::from_degrees(90.0);
+        assert_near(fromRad.value(), M_PI / 2.0);
+        assert_near(fromDeg.value(), 90.0);
+        fmt::print("✅ Static conversion helpers: from_radians, from_degrees\n");
     }
 }
 
