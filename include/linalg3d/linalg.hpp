@@ -35,7 +35,7 @@ namespace linalg3d
         };
     }
 
-    [[nodiscard]] constexpr Quaternion fromEulerAngles(EulerAngles<AngleType::RADIANS> &angles) noexcept
+    [[nodiscard]] constexpr Quaternion fromEulerAngles(EulerAngles<AngleType::RADIANS> const &angles) noexcept
     {
         double cy = std::cos(angles.yaw * 0.5);
         double sy = std::sin(angles.yaw * 0.5);
