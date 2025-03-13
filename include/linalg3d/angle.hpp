@@ -114,6 +114,10 @@ namespace linalg3d
             }
         }
 
+        [[nodiscard]] constexpr Angle operator-() const noexcept
+        {
+            return Angle{-value_};
+        }
     private:
         double value_{};
     };
