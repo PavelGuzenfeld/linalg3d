@@ -64,6 +64,13 @@ namespace linalg3d
             return Quaternion{w * scalar, x * scalar, y * scalar, z * scalar};
         }
 
+        [[nodiscard]] constexpr Vector3 operator*(const Vector3 &v) const noexcept
+        {
+            Quaternion v_quat{0.0, v.x, v.y, v.z};
+            Quaternion result = *this * v_quat * inverse();
+            return Vector3{result.x, result.y, result.z};
+        }
+
         [[nodiscard]] constexpr Quaternion operator/(double scalar) const noexcept
         {
             return Quaternion{w / scalar, x / scalar, y / scalar, z / scalar};

@@ -1,14 +1,18 @@
 #include "linalg3d/linalg.hpp"
-#include <cassert>
-#include <cmath>
-#include <fmt/core.h>
+#include <cassert>    // For assert
+#include <cstdlib>    // For std::exit
+#include <fmt/core.h> // For formatting
 
 // Floating point precision tolerance
 constexpr double EPSILON = 1e-5;
 
-inline void assert_near(double actual, double expected, double tolerance = EPSILON)
+inline void assert_near(double actual, double expected, std::string message = "", double tolerance = EPSILON)
 {
-    assert(std::fabs(actual - expected) < tolerance && "Floating-point values are not close enough");
+    if (std::fabs(actual - expected) >= tolerance)
+    {
+        fmt::print("❌ Assertion failed: {} (actual: {}, expected: {})\n", message, actual, expected);
+        std::exit(1);
+    }
 }
 
 void test_angle()
@@ -550,6 +554,26 @@ void test_quaternion()
         fmt::print("✅ Quaternion multiplication\n");
     }
 
+    // Vector Rotation by Quaternion
+    {
+        // Create a quaternion representing a 90° (pi/2) rotation around the z-axis.
+        double angle = M_PI / 2.0;
+        double cos_val = std::cos(angle / 2.0);
+        double sin_val = std::sin(angle / 2.0);
+        Quaternion q(cos_val, 0.0, 0.0, sin_val); // axis (0, 0, 1)
+
+        // Original vector (1, 0, 0)
+        Vector3 v(1.0, 0.0, 0.0);
+
+        // Rotate the vector using the quaternion.
+        Vector3 rotated = q * v;
+
+        // The expected result of rotating (1,0,0) 90° around z-axis is (0, 1, 0).
+        assert_near(rotated.x, 0.0);
+        assert_near(rotated.y, 1.0);
+        assert_near(rotated.z, 0.0);
+        fmt::print("✅ Vector rotation by quaternion\n");
+    }
 }
 
 void test_operations()
