@@ -1,8 +1,8 @@
 #pragma once
+#include "constexpr_math.hpp"
 #include "euler_angles.hpp"
 #include "matrix3x3.hpp"
 #include "vector3.hpp"
-#include <cmath>
 
 namespace linalg3d
 {
@@ -11,6 +11,11 @@ namespace linalg3d
     {
     public:
         double w{}, x{}, y{}, z{};
+
+        static constexpr Quaternion identity() noexcept
+        {
+            return Quaternion{1.0, 0.0, 0.0, 0.0};
+        }
 
         explicit constexpr Quaternion(double w = 0.0, double x = 0.0, double y = 0.0, double z = 0.0) noexcept
             : w{w}, x{x}, y{y}, z{z} {}
@@ -93,7 +98,7 @@ namespace linalg3d
 
         [[nodiscard]] constexpr double norm() const noexcept
         {
-            return std::sqrt(norm_sq());
+            return gcem::sqrt(norm_sq());
         }
     };
 

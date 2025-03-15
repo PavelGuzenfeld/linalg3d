@@ -1,5 +1,6 @@
 #pragma once
-#include <cmath>
+#include "constexpr_math.hpp"
+#include <algorithm> // for clamp
 
 namespace linalg3d
 {
@@ -13,7 +14,10 @@ namespace linalg3d
     class Angle
     {
     public:
-        explicit constexpr Angle(double value = 0.0) noexcept : value_{value} {}
+        static constexpr double MAX_DEGREES = 1.0e308;                    // ~ max double value safely clamped
+        static constexpr double MAX_RADIANS = MAX_DEGREES * (PI / 180.0); // converted once
+
+        explicit constexpr Angle(double value = 0.0) noexcept : value_{sanitize(value)} {}
 
         [[nodiscard]] constexpr double value() const noexcept
         {
@@ -24,11 +28,11 @@ namespace linalg3d
         {
             if constexpr (T == AngleType::RADIANS)
             {
-                return std::sin(value_);
+                return gcem::sin(value_);
             }
             else
             {
-                return std::sin(value_ * M_PI / 180.0);
+                return gcem::sin(value_ * PI / 180.0);
             }
         }
 
@@ -36,11 +40,11 @@ namespace linalg3d
         {
             if constexpr (T == AngleType::RADIANS)
             {
-                return std::cos(value_);
+                return gcem::cos(value_);
             }
             else
             {
-                return std::cos(value_ * M_PI / 180.0);
+                return gcem::cos(value_ * PI / 180.0);
             }
         }
 
@@ -48,11 +52,11 @@ namespace linalg3d
         {
             if constexpr (T == AngleType::RADIANS)
             {
-                return std::tan(value_);
+                return gcem::tan(value_);
             }
             else
             {
-                return std::tan(value_ * M_PI / 180.0);
+                return gcem::tan(value_ * PI / 180.0);
             }
         }
 
@@ -64,7 +68,7 @@ namespace linalg3d
             }
             else
             {
-                return Angle<AngleType::RADIANS>{value_ * M_PI / 180.0};
+                return Angle<AngleType::RADIANS>{value_ * PI / 180.0};
             }
         }
 
@@ -76,7 +80,7 @@ namespace linalg3d
             }
             else
             {
-                return Angle<AngleType::DEGREES>{value_ * 180.0 / M_PI};
+                return Angle<AngleType::DEGREES>{value_ * 180.0 / PI};
             }
         }
 
@@ -98,7 +102,7 @@ namespace linalg3d
             }
             else
             {
-                return Angle{value * 180.0 / M_PI};
+                return Angle{value * 180.0 / PI};
             }
         }
 
@@ -110,7 +114,7 @@ namespace linalg3d
             }
             else
             {
-                return Angle{value * M_PI / 180.0};
+                return Angle{value * PI / 180.0};
             }
         }
 
@@ -118,7 +122,25 @@ namespace linalg3d
         {
             return Angle{-value_};
         }
+
     private:
+        [[nodiscard]] static constexpr double sanitize(double value) noexcept
+        {
+            if (is_nan(value) || is_inf(value))
+            {
+                return 0.0; // fail-safe fallback
+            }
+
+            if constexpr (T == AngleType::RADIANS)
+            {
+                return std::clamp(value, -MAX_RADIANS, MAX_RADIANS);
+            }
+            else
+            {
+                return std::clamp(value, -MAX_DEGREES, MAX_DEGREES);
+            }
+        }
+        
         double value_{};
     };
 

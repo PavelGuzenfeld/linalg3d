@@ -6,14 +6,10 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# default to release build for the library if not specified
-if (NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the build type" FORCE)
-endif()
-message(STATUS "Library will be built using CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
 # Find dependencies
 find_package(cmake-library REQUIRED)
 find_package(fmt REQUIRED)
+find_package(gcem REQUIRED)
 
 # Runner library
 add_library(${PROJECT_NAME} INTERFACE)
@@ -64,10 +60,10 @@ install(
 
 # Test executable
 add_executable(${PROJECT_NAME}_test test/${PROJECT_NAME}_test.cpp)
-target_link_libraries(${PROJECT_NAME}_test PRIVATE ${PROJECT_NAME} fmt)
+target_link_libraries(${PROJECT_NAME}_test PRIVATE ${PROJECT_NAME} fmt gcem)
 
+# Ensure asserts stay enabled in tests, even in Release mode
 set_debug_options(${PROJECT_NAME}_test)
-enable_sanitizers(${PROJECT_NAME}_test)
 
 # Export the target
 install(

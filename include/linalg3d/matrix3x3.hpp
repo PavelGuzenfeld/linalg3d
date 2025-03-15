@@ -1,6 +1,4 @@
 #pragma once
-#include <cmath>
-
 namespace linalg3d
 {
     class Matrix3x3
@@ -21,6 +19,58 @@ namespace linalg3d
                 m[0][0], m[1][0], m[2][0],
                 m[0][1], m[1][1], m[2][1],
                 m[0][2], m[1][2], m[2][2]};
+        }
+
+        [[nodiscard]] constexpr bool operator==(const Matrix3x3 &other) const noexcept
+        {
+            for (int i = 0; i < 3; ++i)
+            {
+                for (int j = 0; j < 3; ++j)
+                {
+                    if (m[i][j] != other.m[i][j])
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        [[nodiscard]] bool constexpr operator!=(const Matrix3x3 &other) const noexcept
+        {
+            return !(*this == other);
+        }
+
+        [[nodiscard]] constexpr Matrix3x3 operator+(const Matrix3x3 &other) const noexcept
+        {
+            return Matrix3x3{
+                m[0][0] + other.m[0][0], m[0][1] + other.m[0][1], m[0][2] + other.m[0][2],
+                m[1][0] + other.m[1][0], m[1][1] + other.m[1][1], m[1][2] + other.m[1][2],
+                m[2][0] + other.m[2][0], m[2][1] + other.m[2][1], m[2][2] + other.m[2][2]};
+        }
+
+        [[nodiscard]] constexpr Matrix3x3 operator-(const Matrix3x3 &other) const noexcept
+        {
+            return Matrix3x3{
+                m[0][0] - other.m[0][0], m[0][1] - other.m[0][1], m[0][2] - other.m[0][2],
+                m[1][0] - other.m[1][0], m[1][1] - other.m[1][1], m[1][2] - other.m[1][2],
+                m[2][0] - other.m[2][0], m[2][1] - other.m[2][1], m[2][2] - other.m[2][2]};
+        }
+
+        [[nodiscard]] constexpr Matrix3x3 operator*(double scalar) const noexcept
+        {
+            return Matrix3x3{
+                m[0][0] * scalar, m[0][1] * scalar, m[0][2] * scalar,
+                m[1][0] * scalar, m[1][1] * scalar, m[1][2] * scalar,
+                m[2][0] * scalar, m[2][1] * scalar, m[2][2] * scalar};
+        }
+
+        [[nodiscard]] constexpr Matrix3x3 operator/(double scalar) const noexcept
+        {
+            return Matrix3x3{
+                m[0][0] / scalar, m[0][1] / scalar, m[0][2] / scalar,
+                m[1][0] / scalar, m[1][1] / scalar, m[1][2] / scalar,
+                m[2][0] / scalar, m[2][1] / scalar, m[2][2] / scalar};
         }
     };
 

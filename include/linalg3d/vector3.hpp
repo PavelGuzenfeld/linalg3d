@@ -1,6 +1,7 @@
 #pragma once
-#include <cmath>
+#include "gcem.hpp" // for gcem::sqrt constexpr function
 #include <compare> // for std::partial_ordering
+#include "constexpr_math.hpp" //
 
 namespace linalg3d
 {
@@ -9,11 +10,11 @@ namespace linalg3d
     {
         // Example: interpret NaNs as “always greater,” or whichever logic you prefer.
         // This is a simplistic approach; real robust code might do bit tricks for total ordering.
-        if (std::isnan(a) && std::isnan(b))
+        if (is_nan(a) && is_nan(b))
             return std::weak_ordering::equivalent;
-        if (std::isnan(a))
+        if (is_nan(a))
             return std::weak_ordering::greater;
-        if (std::isnan(b))
+        if (is_nan(b))
             return std::weak_ordering::less;
         // Fallback to normal comparison
         if (a < b)
@@ -32,7 +33,7 @@ namespace linalg3d
 
         [[nodiscard]] constexpr double norm() const noexcept
         {
-            return std::sqrt(norm_sq());
+            return gcem::sqrt(norm_sq());
         }
 
         [[nodiscard]] constexpr double norm_sq() const noexcept
