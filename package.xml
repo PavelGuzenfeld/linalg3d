@@ -7,4 +7,5 @@
   <license>MIT</license>
   <build_depend>libfmt-dev</build_depend>
   <build_depend>cmake-library</build_depend>
+  <depend>gcem</depend>
 </package>
