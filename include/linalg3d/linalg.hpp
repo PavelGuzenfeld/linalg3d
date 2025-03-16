@@ -14,13 +14,13 @@ namespace linalg3d
         return Vector3{result.x, result.y, result.z};
     }
 
-    [[nodiscard]] constexpr Matrix3x3 toRotationMatrix(const Quaternion &q) noexcept
+    [[nodiscard]] constexpr Matrix3 toRotationMatrix(const Quaternion &q) noexcept
     {
         double xx = q.x * q.x, yy = q.y * q.y, zz = q.z * q.z;
         double wx = q.w * q.x, wy = q.w * q.y, wz = q.w * q.z;
         double xy = q.x * q.y, xz = q.x * q.z, yz = q.y * q.z;
 
-        return Matrix3x3{
+        return Matrix3{
             1.0 - 2.0 * (yy + zz), 2.0 * (xy - wz), 2.0 * (xz + wy),
             2.0 * (xy + wz), 1.0 - 2.0 * (xx + zz), 2.0 * (yz - wx),
             2.0 * (xz - wy), 2.0 * (yz + wx), 1.0 - 2.0 * (xx + yy)};
