@@ -14,6 +14,11 @@ constexpr bool is_large(double x, double threshold = 1e6)
     return x > threshold || x < -threshold;
 }
 
+constexpr bool nearly_equal(double a, double b, double tol = EPSILON)
+{
+    return (a - b < tol && b - a < tol);
+}
+
 constexpr void test_angle()
 {
     using namespace linalg3d;
@@ -400,8 +405,8 @@ constexpr void test_matrix3x3()
     // Parameterized Constructor
     {
         constexpr Matrix3 m(1.0, 2.0, 3.0,
-                              4.0, 5.0, 6.0,
-                              7.0, 8.0, 9.0);
+                            4.0, 5.0, 6.0,
+                            7.0, 8.0, 9.0);
         static_assert(m.m[0][0] == 1.0 && m.m[0][1] == 2.0 && m.m[0][2] == 3.0);
         static_assert(m.m[1][0] == 4.0 && m.m[1][1] == 5.0 && m.m[1][2] == 6.0);
         static_assert(m.m[2][0] == 7.0 && m.m[2][1] == 8.0 && m.m[2][2] == 9.0);
@@ -410,8 +415,8 @@ constexpr void test_matrix3x3()
     // Brace-enclosed Constructor
     {
         constexpr Matrix3 m{1.0, 2.0, 3.0,
-                              4.0, 5.0, 6.0,
-                              7.0, 8.0, 9.0};
+                            4.0, 5.0, 6.0,
+                            7.0, 8.0, 9.0};
         static_assert(m.m[0][0] == 1.0 && m.m[0][1] == 2.0 && m.m[0][2] == 3.0);
         static_assert(m.m[1][0] == 4.0 && m.m[1][1] == 5.0 && m.m[1][2] == 6.0);
         static_assert(m.m[2][0] == 7.0 && m.m[2][1] == 8.0 && m.m[2][2] == 9.0);
@@ -420,11 +425,11 @@ constexpr void test_matrix3x3()
     // Transpose Test
     {
         constexpr Matrix3 m(1.0, 2.0, 3.0,
-                              4.0, 5.0, 6.0,
-                              7.0, 8.0, 9.0);
+                            4.0, 5.0, 6.0,
+                            7.0, 8.0, 9.0);
         static_assert(m.transpose() == Matrix3(1.0, 4.0, 7.0,
-                                                 2.0, 5.0, 8.0,
-                                                 3.0, 6.0, 9.0));
+                                               2.0, 5.0, 8.0,
+                                               3.0, 6.0, 9.0));
     }
 }
 
@@ -556,8 +561,8 @@ constexpr void test_operations()
         constexpr Quaternion q(1.0, 2.0, 3.0, 4.0);
         constexpr Matrix3 m = toRotationMatrix(q);
         assert(!(m == Matrix3(-7.0, 8.0, 3.0,
-                                6.0, 5.0, -4.0,
-                                9.0, 2.0, -1.0) &&
+                              6.0, 5.0, -4.0,
+                              9.0, 2.0, -1.0) &&
                  "value is out of expected range for matrix"));
     }
 
@@ -598,6 +603,59 @@ constexpr void test_operations()
     }
 }
 
+constexpr void test_matrix_vector_multiplication()
+{
+    using namespace linalg3d;
+
+    // Test 1: Basic multiplication.
+    // Matrix:
+    // [ 1  2  3 ]
+    // [ 4  5  6 ]
+    // [ 7  8  9 ]
+    // Vector: (1, 1, 1)
+    // Expected result: (6, 15, 24)
+    constexpr Matrix3 m(1.0, 2.0, 3.0,
+                        4.0, 5.0, 6.0,
+                        7.0, 8.0, 9.0);
+    constexpr Vector3 v(1.0, 1.0, 1.0);
+    constexpr Vector3 result = m * v;
+    static_assert(nearly_equal(result.x, 6.0), "Matrix-Vector multiplication failed for x component");
+    static_assert(nearly_equal(result.y, 15.0), "Matrix-Vector multiplication failed for y component");
+    static_assert(nearly_equal(result.z, 24.0), "Matrix-Vector multiplication failed for z component");
+
+    // Test 2: Multiplication with the identity matrix.
+    // Identity matrix should leave the vector unchanged.
+    constexpr Matrix3 identity(1.0, 0.0, 0.0,
+                               0.0, 1.0, 0.0,
+                               0.0, 0.0, 1.0);
+    constexpr Vector3 v2(3.14, -2.71, 0.0);
+    constexpr Vector3 result2 = identity * v2;
+    static_assert(nearly_equal(result2.x, v2.x), "Identity matrix multiplication failed for x component");
+    static_assert(nearly_equal(result2.y, v2.y), "Identity matrix multiplication failed for y component");
+    static_assert(nearly_equal(result2.z, v2.z), "Identity matrix multiplication failed for z component");
+
+    // Test 3: Multiplication with a zero matrix.
+    constexpr Matrix3 zero(0.0, 0.0, 0.0,
+                           0.0, 0.0, 0.0,
+                           0.0, 0.0, 0.0);
+    constexpr Vector3 v3(1.0, 2.0, 3.0);
+    constexpr Vector3 result3 = zero * v3;
+    static_assert(nearly_equal(result3.x, 0.0), "Zero matrix multiplication failed for x component");
+    static_assert(nearly_equal(result3.y, 0.0), "Zero matrix multiplication failed for y component");
+    static_assert(nearly_equal(result3.z, 0.0), "Zero matrix multiplication failed for z component");
+
+    {
+        Matrix3 m(2.0, 0.0, 0.0,
+                  0.0, 3.0, 0.0,
+                  0.0, 0.0, 4.0);
+        Vector3 v(1.0, 1.0, 1.0);
+        Vector3 r = m * v; // expected (2, 3, 4)
+        assert(nearly_equal(r.x, 2.0));
+        assert(nearly_equal(r.y, 3.0));
+        assert(nearly_equal(r.z, 4.0));
+    }
+}
+
 int main()
 {
     test_angle();
@@ -608,6 +666,7 @@ int main()
     test_matrix3x3();
     test_euler_angles();
     test_quaternion();
-    fmt::print("All tests passed!\n");
+    test_matrix_vector_multiplication();
+        fmt::print("All tests passed!\n");
     return 0;
 }
