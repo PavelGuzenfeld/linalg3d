@@ -381,7 +381,7 @@ constexpr void test_matrix3x3()
 
     // Default Constructor
     {
-        constexpr Matrix3x3 m;
+        constexpr Matrix3 m;
         constexpr bool all_zero = [&m]() -> bool
         {
             for (std::size_t i = 0; i < 3; ++i)
@@ -399,7 +399,7 @@ constexpr void test_matrix3x3()
 
     // Parameterized Constructor
     {
-        constexpr Matrix3x3 m(1.0, 2.0, 3.0,
+        constexpr Matrix3 m(1.0, 2.0, 3.0,
                               4.0, 5.0, 6.0,
                               7.0, 8.0, 9.0);
         static_assert(m.m[0][0] == 1.0 && m.m[0][1] == 2.0 && m.m[0][2] == 3.0);
@@ -409,7 +409,7 @@ constexpr void test_matrix3x3()
 
     // Brace-enclosed Constructor
     {
-        constexpr Matrix3x3 m{1.0, 2.0, 3.0,
+        constexpr Matrix3 m{1.0, 2.0, 3.0,
                               4.0, 5.0, 6.0,
                               7.0, 8.0, 9.0};
         static_assert(m.m[0][0] == 1.0 && m.m[0][1] == 2.0 && m.m[0][2] == 3.0);
@@ -419,10 +419,10 @@ constexpr void test_matrix3x3()
 
     // Transpose Test
     {
-        constexpr Matrix3x3 m(1.0, 2.0, 3.0,
+        constexpr Matrix3 m(1.0, 2.0, 3.0,
                               4.0, 5.0, 6.0,
                               7.0, 8.0, 9.0);
-        static_assert(m.transpose() == Matrix3x3(1.0, 4.0, 7.0,
+        static_assert(m.transpose() == Matrix3(1.0, 4.0, 7.0,
                                                  2.0, 5.0, 8.0,
                                                  3.0, 6.0, 9.0));
     }
@@ -554,8 +554,8 @@ constexpr void test_operations()
     // Quaternion to Rotation Matrix
     {
         constexpr Quaternion q(1.0, 2.0, 3.0, 4.0);
-        constexpr Matrix3x3 m = toRotationMatrix(q);
-        assert(!(m == Matrix3x3(-7.0, 8.0, 3.0,
+        constexpr Matrix3 m = toRotationMatrix(q);
+        assert(!(m == Matrix3(-7.0, 8.0, 3.0,
                                 6.0, 5.0, -4.0,
                                 9.0, 2.0, -1.0) &&
                  "value is out of expected range for matrix"));
