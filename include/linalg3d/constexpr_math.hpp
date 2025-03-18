@@ -4,6 +4,7 @@
 namespace linalg3d
 {
     constexpr double PI = static_cast<double>(GCEM_PI);
+    constexpr double HALF_PI = static_cast<double>(GCEM_HALF_PI);
 
     constexpr bool fabs(double x)
     {
