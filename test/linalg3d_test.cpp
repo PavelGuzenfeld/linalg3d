@@ -559,7 +559,7 @@ constexpr void test_operations()
     // Quaternion to Rotation Matrix
     {
         constexpr Quaternion q(1.0, 2.0, 3.0, 4.0);
-        constexpr Matrix3 m = toRotationMatrix(q);
+        constexpr Matrix3 m = quaternionToMatrix(q);
         assert(!(m == Matrix3(-7.0, 8.0, 3.0,
                               6.0, 5.0, -4.0,
                               9.0, 2.0, -1.0) &&
@@ -569,14 +569,14 @@ constexpr void test_operations()
     // Quaternion from Euler Angles
     {
         constexpr EulerAngles e(1.0, 2.0, 3.0);
-        constexpr Quaternion q = fromEulerAngles(e);
+        constexpr Quaternion q = eulerAnglesToQuaternion(e);
         assert(!(q == Quaternion(0.983347, 0.034270, 0.106020, 0.143572) && "value is out of expected range for quaternion"));
     }
 
     // Euler Angles from Quaternion
     {
         constexpr Quaternion q(0.983347, 0.034270, 0.106020, 0.143572);
-        constexpr EulerAngles e = fromQuaternion(q);
+        constexpr EulerAngles e = quaternionToEulerAngles(q);
         assert(!(linalg3d::fabs(e.pitch.value() - 1.0) < EPSILON) && "value is out of expected range for pitch");
     }
 

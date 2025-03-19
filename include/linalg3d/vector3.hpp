@@ -120,6 +120,11 @@ namespace linalg3d
         {
             return (*this <=> other) != std::weak_ordering::less;
         }
+
+        [[nodiscard]] constexpr Vector3 abs () const noexcept
+        {
+            return Vector3{std::abs(x), std::abs(y), std::abs(z)};
+        }
     };
 
 } // namespace linalg3d
