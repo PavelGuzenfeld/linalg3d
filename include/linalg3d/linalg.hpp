@@ -64,7 +64,8 @@ namespace linalg3d
             mat.m[2][0] * vec.x + mat.m[2][1] * vec.y + mat.m[2][2] * vec.z);
     }
 
-    [[nodiscard]] constexpr Vector3 eulerAnglesToVector3 (const EulerAngles<AngleType::RADIANS> &angles) noexcept
+    template <AngleType T>
+    [[nodiscard]] constexpr Vector3 eulerAnglesToVector3(const EulerAngles<T> &angles) noexcept
     {
         return Vector3{angles.roll.value(), angles.roll.value(), angles.yaw.value()};
     }
