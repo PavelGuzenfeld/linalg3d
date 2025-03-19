@@ -35,7 +35,7 @@ namespace linalg3d
         };
     }
 
-    [[nadiscard]] constexpr Vector3 quaternionToVector3(const linalg3d::Quaternion &q) noexcept
+    [[nodiscard]] constexpr Vector3 quaternionToVector3(const linalg3d::Quaternion &q) noexcept
     {
         return linalg3d::Vector3{q.x, q.y, q.z};
     }
