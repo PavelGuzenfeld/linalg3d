@@ -14,7 +14,7 @@ namespace linalg3d
         return Vector3{result.x, result.y, result.z};
     }
 
-    [[nodiscard]] constexpr Matrix3 toRotationMatrix(const Quaternion &q) noexcept
+    [[nodiscard]] constexpr Matrix3 quaternionToMatrix(const Quaternion &q) noexcept
     {
         double xx = q.x * q.x, yy = q.y * q.y, zz = q.z * q.z;
         double wx = q.w * q.x, wy = q.w * q.y, wz = q.w * q.z;
@@ -26,7 +26,7 @@ namespace linalg3d
             2.0 * (xz - wy), 2.0 * (yz + wx), 1.0 - 2.0 * (xx + yy)};
     }
 
-    [[nodiscard]] constexpr EulerAngles<AngleType::RADIANS> fromQuaternion(const Quaternion &q) noexcept
+    [[nodiscard]] constexpr EulerAngles<AngleType::RADIANS> quaternionToEulerAngles(const Quaternion &q) noexcept
     {
         return EulerAngles<AngleType::RADIANS>{
             gcem::atan2(2.0 * (q.w * q.x + q.y * q.z), 1.0 - 2.0 * (q.x * q.x + q.y * q.y)), // Pitch
@@ -35,7 +35,12 @@ namespace linalg3d
         };
     }
 
-    [[nodiscard]] constexpr Quaternion fromEulerAngles(EulerAngles<AngleType::RADIANS> const &angles) noexcept
+    [[nadiscard]] constexpr Vector3 quaternionToVector3(const linalg3d::Quaternion &q) noexcept
+    {
+        return linalg3d::Vector3{q.x, q.y, q.z};
+    }
+
+    [[nodiscard]] constexpr Quaternion eulerAnglesToQuaternion(EulerAngles<AngleType::RADIANS> const &angles) noexcept
     {
         double cy = gcem::cos(angles.yaw * 0.5);
         double sy = gcem::sin(angles.yaw * 0.5);
@@ -51,12 +56,22 @@ namespace linalg3d
             cr * cp * sy - sr * sp * cy};
     }
 
-    [[nodiscard]] constexpr linalg3d::Vector3 operator*(const linalg3d::Matrix3 &mat, const linalg3d::Vector3 &vec)
+    [[nodiscard]] constexpr Vector3 operator*(const linalg3d::Matrix3 &mat, const linalg3d::Vector3 &vec)
     {
         return linalg3d::Vector3(
             mat.m[0][0] * vec.x + mat.m[0][1] * vec.y + mat.m[0][2] * vec.z,
             mat.m[1][0] * vec.x + mat.m[1][1] * vec.y + mat.m[1][2] * vec.z,
             mat.m[2][0] * vec.x + mat.m[2][1] * vec.y + mat.m[2][2] * vec.z);
+    }
+
+    [[nodiscard]] constexpr Vector3 eulerAnglesToVector3 (const EulerAngles<AngleType::RADIANS> &angles) noexcept
+    {
+        return Vector3{angles.roll.value(), angles.roll.value(), angles.yaw.value()};
+    }
+
+    [[nodiscard]] constexpr EulerAngles<AngleType::RADIANS> vector3ToEulerAngles (const Vector3 &vec) noexcept
+    {
+        return EulerAngles<AngleType::RADIANS>{vec.y, vec.z, vec.x};
     }
 
 } // namespace linalg3d
