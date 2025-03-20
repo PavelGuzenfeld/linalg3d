@@ -707,6 +707,28 @@ constexpr void test_quaternion_rotation_invariants()
     static_assert(nearly_equal(rotated.z, 1.0), "Rotation failed to place vector on Z axis");
 }
 
+constexpr void test_matrix3x3_determinant()
+{
+    using namespace linalg3d;
+
+    constexpr Matrix3 singularMatrix(1.0, 2.0, 3.0,
+                                     2.0, 4.0, 6.0,
+                                     3.0, 6.0, 9.0); // Rows are linearly dependent
+    constexpr Matrix3 identityMatrix(1.0, 0.0, 0.0,
+                                     0.0, 1.0, 0.0,
+                                     0.0, 0.0, 1.0);
+
+    static_assert(singularMatrix.determinant() == 0.0, "Singular matrix should have determinant 0");
+    static_assert(identityMatrix.determinant() == 1.0, "Identity matrix determinant should be 1");
+
+    // Attempt inversion (should fail gracefully)
+    constexpr Matrix3 inverseSingular = singularMatrix.inverse();
+    constexpr Matrix3 inverseIdentity = identityMatrix.inverse();
+
+    static_assert(inverseSingular == Matrix3{}, "Inverse of singular matrix should be zero matrix");
+    static_assert(inverseIdentity == identityMatrix, "Inverse of identity should be identity");
+}
+
 int main()
 {
     test_angle();
@@ -722,6 +744,7 @@ int main()
     test_angle_floating_point_limits();
     test_vector3_normalization_safety();
     test_quaternion_rotation_invariants();
+    test_matrix3x3_determinant();
     fmt::print("All tests passed!\n");
     return 0;
 }

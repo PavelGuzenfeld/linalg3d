@@ -9,8 +9,8 @@ namespace linalg3d
         constexpr Matrix3() noexcept = default;
 
         constexpr Matrix3(double m00, double m01, double m02,
-                            double m10, double m11, double m12,
-                            double m20, double m21, double m22) noexcept
+                          double m10, double m11, double m12,
+                          double m20, double m21, double m22) noexcept
             : m{{m00, m01, m02}, {m10, m11, m12}, {m20, m21, m22}} {}
 
         [[nodiscard]] constexpr Matrix3 transpose() const noexcept
@@ -19,6 +19,36 @@ namespace linalg3d
                 m[0][0], m[1][0], m[2][0],
                 m[0][1], m[1][1], m[2][1],
                 m[0][2], m[1][2], m[2][2]};
+        }
+
+        [[nodiscard]] constexpr double determinant() const noexcept
+        {
+            return m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
+                   m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
+                   m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+        }
+
+        [[nodiscard]] constexpr Matrix3 inverse() const noexcept
+        {
+            double det = determinant();
+            if (det == 0.0)
+            {
+                return Matrix3{}; // Return a zero matrix as an error state
+            }
+
+            double invDet = 1.0 / det;
+            return Matrix3{
+                (m[1][1] * m[2][2] - m[1][2] * m[2][1]) * invDet,
+                (m[0][2] * m[2][1] - m[0][1] * m[2][2]) * invDet,
+                (m[0][1] * m[1][2] - m[0][2] * m[1][1]) * invDet,
+
+                (m[1][2] * m[2][0] - m[1][0] * m[2][2]) * invDet,
+                (m[0][0] * m[2][2] - m[0][2] * m[2][0]) * invDet,
+                (m[0][2] * m[1][0] - m[0][0] * m[1][2]) * invDet,
+
+                (m[1][0] * m[2][1] - m[1][1] * m[2][0]) * invDet,
+                (m[0][1] * m[2][0] - m[0][0] * m[2][1]) * invDet,
+                (m[0][0] * m[1][1] - m[0][1] * m[1][0]) * invDet};
         }
 
         [[nodiscard]] constexpr bool operator==(const Matrix3 &other) const noexcept
