@@ -656,6 +656,25 @@ constexpr void test_matrix_vector_multiplication()
     }
 }
 
+void test_angle_floating_point_limits()
+{
+    using namespace linalg3d;
+
+    Angle<AngleType::RADIANS> smallRad(std::numeric_limits<double>::min());
+    Angle<AngleType::RADIANS> largeRad(std::numeric_limits<double>::max());
+
+    assert(!is_nan(largeRad.to_degrees().value()) && "Max double conversion returned NaN");
+    assert(!is_inf(largeRad.to_degrees().value()) && "Max double conversion returned Inf");
+
+    Angle<AngleType::DEGREES> smallDeg(std::numeric_limits<double>::min());
+    Angle<AngleType::DEGREES> largeDeg(std::numeric_limits<double>::max());
+
+    assert(!is_nan(largeDeg.to_radians().value()) && "Max double conversion returned NaN");
+    assert(!is_inf(largeDeg.to_radians().value()) && "Max double conversion returned Inf");
+
+    fmt::print("Floating-point limit tests passed!\n");
+}
+
 int main()
 {
     test_angle();
@@ -667,6 +686,8 @@ int main()
     test_euler_angles();
     test_quaternion();
     test_matrix_vector_multiplication();
-        fmt::print("All tests passed!\n");
+    test_operations();
+    test_angle_floating_point_limits();
+    fmt::print("All tests passed!\n");
     return 0;
 }

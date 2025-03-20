@@ -140,7 +140,7 @@ namespace linalg3d
                 return std::clamp(value, -MAX_DEGREES, MAX_DEGREES);
             }
         }
-        
+
         double value_{};
     };
 
