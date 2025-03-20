@@ -671,8 +671,22 @@ void test_angle_floating_point_limits()
 
     assert(!is_nan(largeDeg.to_radians().value()) && "Max double conversion returned NaN");
     assert(!is_inf(largeDeg.to_radians().value()) && "Max double conversion returned Inf");
+}
 
-    fmt::print("Floating-point limit tests passed!\n");
+constexpr void test_vector3_normalization_safety()
+{
+    using namespace linalg3d;
+
+    constexpr Vector3 zeroVec(0.0, 0.0, 0.0);
+    constexpr Vector3 normed = zeroVec.normalized();
+
+    static_assert(normed == zeroVec, "Zero vector should remain zero after normalization");
+
+    constexpr Vector3 smallVec(1e-200, 1e-200, 1e-200);
+    constexpr Vector3 normedSmall = smallVec.normalized();
+
+    static_assert(!is_nan(normedSmall.x) && !is_nan(normedSmall.y) && !is_nan(normedSmall.z),
+                  "Normalization of small vector produced NaN values");
 }
 
 int main()
@@ -688,6 +702,7 @@ int main()
     test_matrix_vector_multiplication();
     test_operations();
     test_angle_floating_point_limits();
+    test_vector3_normalization_safety();
     fmt::print("All tests passed!\n");
     return 0;
 }
