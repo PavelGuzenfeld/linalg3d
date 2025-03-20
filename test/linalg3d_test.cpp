@@ -763,6 +763,19 @@ constexpr void test_quaternion_inverse()
     static_assert(nearly_equal(identity.z, 0.0), "Quaternion inverse test failed at z");
 }
 
+constexpr void test_quaternion_dot_product()
+{
+    using namespace linalg3d;
+
+    constexpr Quaternion q1(1.0, 2.0, 3.0, 4.0);
+    constexpr Quaternion q2(5.0, 6.0, 7.0, 8.0);
+
+    constexpr double dot = q1.dot(q2);
+    constexpr double expected = 1.0 * 5.0 + 2.0 * 6.0 + 3.0 * 7.0 + 4.0 * 8.0;
+
+    static_assert(nearly_equal(dot, expected), "Quaternion dot product is incorrect");
+}
+
 int main()
 {
     test_angle();
@@ -781,6 +794,7 @@ int main()
     test_matrix3x3_determinant();
     test_matrix_inversion_correctness();
     test_quaternion_inverse();
+    test_quaternion_dot_product();
     fmt::print("All tests passed!\n");
     return 0;
 }
