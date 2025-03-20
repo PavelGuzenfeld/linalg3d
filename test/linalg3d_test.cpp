@@ -689,6 +689,24 @@ constexpr void test_vector3_normalization_safety()
                   "Normalization of small vector produced NaN values");
 }
 
+constexpr void test_quaternion_rotation_invariants()
+{
+    using namespace linalg3d;
+
+    constexpr Quaternion q(0.70710678, 0.70710678, 0.0, 0.0); // 90-degree rotation around X-axis
+    constexpr Vector3 v(0.0, 1.0, 0.0);
+    constexpr Vector3 rotated = q * v;
+
+    constexpr double origNorm = v.norm();
+    constexpr double newNorm = rotated.norm();
+
+    static_assert(nearly_equal(origNorm, newNorm), "Quaternion rotation should preserve vector norm");
+
+    // Ensure rotated vector is where we expect it to be
+    static_assert(nearly_equal(rotated.y, 0.0), "Rotation moved Y component incorrectly");
+    static_assert(nearly_equal(rotated.z, 1.0), "Rotation failed to place vector on Z axis");
+}
+
 int main()
 {
     test_angle();
@@ -703,6 +721,7 @@ int main()
     test_operations();
     test_angle_floating_point_limits();
     test_vector3_normalization_safety();
+    test_quaternion_rotation_invariants();
     fmt::print("All tests passed!\n");
     return 0;
 }
