@@ -729,6 +729,26 @@ constexpr void test_matrix3x3_determinant()
     static_assert(inverseIdentity == identityMatrix, "Inverse of identity should be identity");
 }
 
+constexpr void test_matrix_inversion_correctness()
+{
+    using namespace linalg3d;
+
+    constexpr Matrix3 m(2.0, -1.0, 0.0,
+                        -1.0, 2.0, -1.0,
+                        0.0, -1.0, 2.0);
+
+    constexpr Matrix3 inv = m.inverse();
+    constexpr Matrix3 result = m * inv;
+
+    constexpr Matrix3 identity(1.0, 0.0, 0.0,
+                               0.0, 1.0, 0.0,
+                               0.0, 0.0, 1.0);
+
+    static_assert(nearly_equal(result.m[0][0], identity.m[0][0]), "Inverse test failed for [0][0]");
+    static_assert(nearly_equal(result.m[1][1], identity.m[1][1]), "Inverse test failed for [1][1]");
+    static_assert(nearly_equal(result.m[2][2], identity.m[2][2]), "Inverse test failed for [2][2]");
+}
+
 int main()
 {
     test_angle();
@@ -745,6 +765,7 @@ int main()
     test_vector3_normalization_safety();
     test_quaternion_rotation_invariants();
     test_matrix3x3_determinant();
+    test_matrix_inversion_correctness();
     fmt::print("All tests passed!\n");
     return 0;
 }
