@@ -749,6 +749,20 @@ constexpr void test_matrix_inversion_correctness()
     static_assert(nearly_equal(result.m[2][2], identity.m[2][2]), "Inverse test failed for [2][2]");
 }
 
+constexpr void test_quaternion_inverse()
+{
+    using namespace linalg3d;
+
+    constexpr Quaternion q(1.0, 2.0, 3.0, 4.0);
+    constexpr Quaternion q_inv = q.inverse();
+    constexpr Quaternion identity = q * q_inv;
+
+    static_assert(nearly_equal(identity.w, 1.0), "Quaternion inverse test failed at w");
+    static_assert(nearly_equal(identity.x, 0.0), "Quaternion inverse test failed at x");
+    static_assert(nearly_equal(identity.y, 0.0), "Quaternion inverse test failed at y");
+    static_assert(nearly_equal(identity.z, 0.0), "Quaternion inverse test failed at z");
+}
+
 int main()
 {
     test_angle();
@@ -766,6 +780,7 @@ int main()
     test_quaternion_rotation_invariants();
     test_matrix3x3_determinant();
     test_matrix_inversion_correctness();
+    test_quaternion_inverse();
     fmt::print("All tests passed!\n");
     return 0;
 }
