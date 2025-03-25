@@ -17,8 +17,8 @@ namespace linalg3d
             return Quaternion{1.0, 0.0, 0.0, 0.0};
         }
 
-        explicit constexpr Quaternion(double w = 0.0, double x = 0.0, double y = 0.0, double z = 0.0) noexcept
-            : w{w}, x{x}, y{y}, z{z} {}
+        explicit constexpr Quaternion(double w_a = 0.0, double x_a = 0.0, double y_a = 0.0, double z_a = 0.0) noexcept
+            : w{w_a}, x{x_a}, y{y_a}, z{z_a} {}
 
         [[nodiscard]] constexpr Quaternion normalized() const noexcept
         {

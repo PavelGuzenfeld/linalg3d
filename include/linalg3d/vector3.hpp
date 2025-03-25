@@ -28,8 +28,8 @@ namespace linalg3d
     {
         double x{}, y{}, z{};
 
-        explicit constexpr Vector3(double x = 0.0, double y = 0.0, double z = 0.0) noexcept
-            : x{x}, y{y}, z{z} {}
+        explicit constexpr Vector3(double x_a = 0.0, double y_a = 0.0, double z_a = 0.0) noexcept
+            : x{x_a}, y{y_a}, z{z_a} {}
 
         [[nodiscard]] constexpr double norm() const noexcept
         {
