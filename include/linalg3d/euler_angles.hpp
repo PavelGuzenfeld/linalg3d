@@ -9,13 +9,13 @@ namespace linalg3d
         Angle<T> pitch{}, yaw{}, roll{};
 
         constexpr EulerAngles() noexcept = default;
-        constexpr EulerAngles(Angle<T> pitch, Angle<T> yaw, Angle<T> roll) noexcept
-            : pitch{pitch}, yaw{yaw}, roll{roll} {}
+        constexpr EulerAngles(Angle<T> pitch_a, Angle<T> yaw_a, Angle<T> roll_a) noexcept
+            : pitch{pitch_a}, yaw{yaw_a}, roll{roll_a} {}
 
-        constexpr EulerAngles(double pitch, double yaw, double roll) noexcept
-            : pitch{Angle<T>::from_radians(pitch)},
-              yaw{Angle<T>::from_radians(yaw)},
-              roll{Angle<T>::from_radians(roll)} {}
+        constexpr EulerAngles(double pitch_a, double yaw_a, double roll_a) noexcept
+            : pitch{Angle<T>::from_radians(pitch_a)},
+              yaw{Angle<T>::from_radians(yaw_a)},
+              roll{Angle<T>::from_radians(roll_a)} {}
         constexpr EulerAngles<AngleType::RADIANS> to_radians() const noexcept
         {
             if constexpr (T == AngleType::RADIANS)

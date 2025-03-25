@@ -606,23 +606,23 @@ constexpr void test_operations()
 constexpr void test_matrix_vector_multiplication()
 {
     using namespace linalg3d;
-
-    // Test 1: Basic multiplication.
-    // Matrix:
-    // [ 1  2  3 ]
-    // [ 4  5  6 ]
-    // [ 7  8  9 ]
-    // Vector: (1, 1, 1)
-    // Expected result: (6, 15, 24)
-    constexpr Matrix3 m(1.0, 2.0, 3.0,
-                        4.0, 5.0, 6.0,
-                        7.0, 8.0, 9.0);
-    constexpr Vector3 v(1.0, 1.0, 1.0);
-    constexpr Vector3 result = m * v;
-    static_assert(nearly_equal(result.x, 6.0), "Matrix-Vector multiplication failed for x component");
-    static_assert(nearly_equal(result.y, 15.0), "Matrix-Vector multiplication failed for y component");
-    static_assert(nearly_equal(result.z, 24.0), "Matrix-Vector multiplication failed for z component");
-
+    {
+        // Test 1: Basic multiplication.
+        // Matrix:
+        // [ 1  2  3 ]
+        // [ 4  5  6 ]
+        // [ 7  8  9 ]
+        // Vector: (1, 1, 1)
+        // Expected result: (6, 15, 24)
+        constexpr Matrix3 m(1.0, 2.0, 3.0,
+                            4.0, 5.0, 6.0,
+                            7.0, 8.0, 9.0);
+        constexpr Vector3 v(1.0, 1.0, 1.0);
+        constexpr Vector3 result = m * v;
+        static_assert(nearly_equal(result.x, 6.0), "Matrix-Vector multiplication failed for x component");
+        static_assert(nearly_equal(result.y, 15.0), "Matrix-Vector multiplication failed for y component");
+        static_assert(nearly_equal(result.z, 24.0), "Matrix-Vector multiplication failed for z component");
+    }
     // Test 2: Multiplication with the identity matrix.
     // Identity matrix should leave the vector unchanged.
     constexpr Matrix3 identity(1.0, 0.0, 0.0,

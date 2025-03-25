@@ -66,7 +66,7 @@ add_executable(${PROJECT_NAME}_test test/${PROJECT_NAME}_test.cpp)
 target_link_libraries(${PROJECT_NAME}_test PRIVATE ${PROJECT_NAME} fmt gcem)
 
 # Ensure asserts stay enabled in tests, even in Release mode
-set_debug_options(${PROJECT_NAME}_test)
+set_warnings_and_errors(${PROJECT_NAME}_test)
 
 # Export the target
 install(
