@@ -55,9 +55,13 @@ FetchContent_Declare(nanobench GIT_REPOSITORY https://github.com/martinus/nanobe
                      SYSTEM EXCLUDE_FROM_ALL)
 FetchContent_MakeAvailable(nanobench)
 
+set(BUILD_TESTING OFF)
+set(EIGEN_BUILD_DOC OFF)
+set(EIGEN_BUILD_PKGCONFIG OFF)
 FetchContent_Declare(eigen GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git GIT_TAG 3.4.0
                      SYSTEM EXCLUDE_FROM_ALL)
 FetchContent_MakeAvailable(eigen)
+set(BUILD_TESTING ON)
 
 # Header-only library
 add_library(${PROJECT_NAME} INTERFACE)
