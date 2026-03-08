@@ -17,7 +17,7 @@ public:
     static constexpr double MAX_DEGREES = 1.0e308;
     static constexpr double MAX_RADIANS = MAX_DEGREES * (PI / 180.0);
 
-    explicit constexpr Angle(double value = 0.0) noexcept : value_{sanitize(value)}
+    explicit constexpr Angle(double value = 0.0) noexcept : value_{value}
     {
     }
 
@@ -124,17 +124,6 @@ public:
     }
 
 private:
-    [[nodiscard]] static constexpr double sanitize(double value) noexcept
-    {
-        if (is_nan(value) || is_inf(value))
-            return 0.0;
-
-        if constexpr (T == AngleType::RADIANS)
-            return clamp(value, -MAX_RADIANS, MAX_RADIANS);
-        else
-            return clamp(value, -MAX_DEGREES, MAX_DEGREES);
-    }
-
     double value_{};
 };
 
