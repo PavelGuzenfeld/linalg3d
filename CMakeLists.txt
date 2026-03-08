@@ -6,8 +6,27 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Compiler warnings (inlined from cmake-library)
+function(linalg3d_set_warnings target)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(${target} PRIVATE
+            -Wall -Wextra -Wpedantic -Werror
+            -Wconversion -Wsign-conversion -Wnull-dereference
+            -Wdouble-promotion -Wformat=2 -Wshadow
+            -Wuninitialized -Wunreachable-code -Wunused
+        )
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            target_compile_options(${target} PRIVATE
+                -Wduplicated-cond -Wduplicated-branches
+                -Wlogical-op -Wuseless-cast
+            )
+        endif()
+    elseif(MSVC)
+        target_compile_options(${target} PRIVATE /W4 /WX)
+    endif()
+endfunction()
+
 # Find dependencies
-find_package(cmake-library REQUIRED)
 find_package(fmt REQUIRED)
 find_package(gcem REQUIRED)
 
@@ -71,15 +90,8 @@ enable_testing()
 
 add_executable(${PROJECT_NAME}_test test/${PROJECT_NAME}_test.cpp)
 target_link_libraries(${PROJECT_NAME}_test PRIVATE ${PROJECT_NAME} fmt gcem doctest::doctest)
-set_warnings_and_errors(${PROJECT_NAME}_test)
+linalg3d_set_warnings(${PROJECT_NAME}_test)
 add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
-
-# Export the target
-install(
-    TARGETS ${PROJECT_NAME}_test
-    EXPORT ${PROJECT_NAME}Targets
-    DESTINATION bin
-)
 
 # Handle "Manually-specified variables were not used by the project" warning.
 unset(CATKIN_INSTALL_INTO_PREFIX_ROOT)

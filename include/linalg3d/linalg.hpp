@@ -39,9 +39,9 @@ namespace linalg3d
     [[nodiscard]] constexpr EulerAngles<AngleType::RADIANS> quaternion_to_euler_angles(const Quaternion &q) noexcept
     {
         return EulerAngles<AngleType::RADIANS>{
-            gcem::atan2(2.0 * (q.w * q.x + q.y * q.z), 1.0 - 2.0 * (q.x * q.x + q.y * q.y)),
+            gcem::asin(std::clamp(2.0 * (q.w * q.y - q.z * q.x), -1.0, 1.0)),
             gcem::atan2(2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z)),
-            gcem::asin(std::clamp(2.0 * (q.w * q.y - q.z * q.x), -1.0, 1.0))};
+            gcem::atan2(2.0 * (q.w * q.x + q.y * q.z), 1.0 - 2.0 * (q.x * q.x + q.y * q.y))};
     }
 
     [[nodiscard]] constexpr Vector3 quaternion_to_vector3(const Quaternion &q) noexcept
