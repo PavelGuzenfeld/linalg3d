@@ -6,3 +6,4 @@
 
 # Standard CMake files (PascalCase required by CMake)
 ^CMakePresets\.json$
+^linalg3dConfig\.cmake\.in$
