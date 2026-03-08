@@ -50,8 +50,7 @@ struct fmt::formatter<linalg3d::Matrix2> : fmt::formatter<double>
 {
     auto format(const linalg3d::Matrix2 &m, fmt::format_context &ctx) const
     {
-        return fmt::format_to(ctx.out(), "[[{}, {}], [{}, {}]]",
-                              m.m[0][0], m.m[0][1], m.m[1][0], m.m[1][1]);
+        return fmt::format_to(ctx.out(), "[[{}, {}], [{}, {}]]", m.m[0][0], m.m[0][1], m.m[1][0], m.m[1][1]);
     }
 };
 
@@ -62,9 +61,15 @@ struct fmt::formatter<linalg3d::Matrix3> : fmt::formatter<double>
     {
         return fmt::format_to(ctx.out(),
                               "[[{}, {}, {}], [{}, {}, {}], [{}, {}, {}]]",
-                              m.m[0][0], m.m[0][1], m.m[0][2],
-                              m.m[1][0], m.m[1][1], m.m[1][2],
-                              m.m[2][0], m.m[2][1], m.m[2][2]);
+                              m.m[0][0],
+                              m.m[0][1],
+                              m.m[0][2],
+                              m.m[1][0],
+                              m.m[1][1],
+                              m.m[1][2],
+                              m.m[2][0],
+                              m.m[2][1],
+                              m.m[2][2]);
     }
 };
 
@@ -75,10 +80,22 @@ struct fmt::formatter<linalg3d::Matrix4> : fmt::formatter<double>
     {
         return fmt::format_to(ctx.out(),
                               "[[{}, {}, {}, {}], [{}, {}, {}, {}], [{}, {}, {}, {}], [{}, {}, {}, {}]]",
-                              m.m[0][0], m.m[0][1], m.m[0][2], m.m[0][3],
-                              m.m[1][0], m.m[1][1], m.m[1][2], m.m[1][3],
-                              m.m[2][0], m.m[2][1], m.m[2][2], m.m[2][3],
-                              m.m[3][0], m.m[3][1], m.m[3][2], m.m[3][3]);
+                              m.m[0][0],
+                              m.m[0][1],
+                              m.m[0][2],
+                              m.m[0][3],
+                              m.m[1][0],
+                              m.m[1][1],
+                              m.m[1][2],
+                              m.m[1][3],
+                              m.m[2][0],
+                              m.m[2][1],
+                              m.m[2][2],
+                              m.m[2][3],
+                              m.m[3][0],
+                              m.m[3][1],
+                              m.m[3][2],
+                              m.m[3][3]);
     }
 };
 
@@ -99,7 +116,10 @@ struct fmt::formatter<linalg3d::EulerAngles<T>> : fmt::formatter<double>
 {
     auto format(const linalg3d::EulerAngles<T> &e, fmt::format_context &ctx) const
     {
-        return fmt::format_to(ctx.out(), "EulerAngles(pitch={}, yaw={}, roll={})",
-                              e.pitch.value(), e.yaw.value(), e.roll.value());
+        return fmt::format_to(ctx.out(),
+                              "EulerAngles(pitch={}, yaw={}, roll={})",
+                              e.pitch.value(),
+                              e.yaw.value(),
+                              e.roll.value());
     }
 };

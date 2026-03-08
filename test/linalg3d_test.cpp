@@ -1,7 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include <doctest/doctest.h>
-#include "linalg3d/linalg.hpp"
 #include "linalg3d/format.hpp"
+#include "linalg3d/linalg.hpp"
+#include <doctest/doctest.h>
 #include <limits>
 
 using namespace linalg3d;
@@ -10,9 +10,14 @@ using namespace linalg3d;
 struct MockRadian
 {
     double val;
-    constexpr explicit MockRadian(double v) noexcept : val{v} {}
+    constexpr explicit MockRadian(double v) noexcept : val{v}
+    {
+    }
     constexpr MockRadian() noexcept = default;
-    [[nodiscard]] constexpr double get() const noexcept { return val; }
+    [[nodiscard]] constexpr double get() const noexcept
+    {
+        return val;
+    }
     constexpr auto operator<=>(const MockRadian &) const = default;
 };
 
@@ -382,8 +387,7 @@ TEST_CASE("Matrix2 * Vector2")
 TEST_CASE("Matrix3: construction")
 {
     constexpr Matrix3 m;
-    constexpr bool all_zero = [&m]()
-    {
+    constexpr bool all_zero = [&m]() {
         for (int i = 0; i < 3; ++i)
             for (int j = 0; j < 3; ++j)
                 if (m.m[i][j] != 0.0)
@@ -476,21 +480,13 @@ TEST_CASE("Matrix4: determinant")
 {
     static_assert(Matrix4::identity().determinant() == 1.0);
 
-    constexpr Matrix4 m(
-        2.0, 0.0, 0.0, 0.0,
-        0.0, 3.0, 0.0, 0.0,
-        0.0, 0.0, 4.0, 0.0,
-        0.0, 0.0, 0.0, 5.0);
+    constexpr Matrix4 m(2.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 0.0, 5.0);
     static_assert(m.determinant() == 120.0);
 }
 
 TEST_CASE("Matrix4: transpose")
 {
-    constexpr Matrix4 m(
-        1.0, 2.0, 3.0, 4.0,
-        5.0, 6.0, 7.0, 8.0,
-        9.0, 10.0, 11.0, 12.0,
-        13.0, 14.0, 15.0, 16.0);
+    constexpr Matrix4 m(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
     constexpr auto t = m.transpose();
     static_assert(t.m[0][1] == 5.0 && t.m[1][0] == 2.0);
     static_assert(t.m[3][0] == 4.0 && t.m[0][3] == 13.0);
@@ -503,21 +499,13 @@ TEST_CASE("Matrix4: inverse")
     static_assert(id_inv.value() == Matrix4::identity());
 
     // Singular matrix
-    constexpr Matrix4 singular(
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 0.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0);
+    constexpr Matrix4 singular(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
     static_assert(!singular.inverse().has_value());
 }
 
 TEST_CASE("Matrix4: inverse correctness")
 {
-    constexpr Matrix4 m(
-        2.0, 0.0, 0.0, 1.0,
-        0.0, 3.0, 0.0, 0.0,
-        0.0, 0.0, 4.0, 0.0,
-        1.0, 0.0, 0.0, 2.0);
+    constexpr Matrix4 m(2.0, 0.0, 0.0, 1.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0, 4.0, 0.0, 1.0, 0.0, 0.0, 2.0);
     constexpr auto inv = m.inverse();
     static_assert(inv.has_value());
 
@@ -543,11 +531,7 @@ TEST_CASE("Matrix4 * Vector4")
     constexpr Vector4 v(1.0, 2.0, 3.0, 4.0);
     static_assert((id * v) == v);
 
-    constexpr Matrix4 scale(
-        2.0, 0.0, 0.0, 0.0,
-        0.0, 3.0, 0.0, 0.0,
-        0.0, 0.0, 4.0, 0.0,
-        0.0, 0.0, 0.0, 1.0);
+    constexpr Matrix4 scale(2.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 0.0, 1.0);
     static_assert((scale * v) == Vector4(2.0, 6.0, 12.0, 4.0));
 }
 
