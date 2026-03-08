@@ -58,44 +58,44 @@ public:
 
     [[nodiscard]] constexpr double determinant() const noexcept
     {
-        double s0 = m[2][0] * m[3][1] - m[2][1] * m[3][0];
-        double s1 = m[2][0] * m[3][2] - m[2][2] * m[3][0];
-        double s2 = m[2][0] * m[3][3] - m[2][3] * m[3][0];
-        double s3 = m[2][1] * m[3][2] - m[2][2] * m[3][1];
-        double s4 = m[2][1] * m[3][3] - m[2][3] * m[3][1];
-        double s5 = m[2][2] * m[3][3] - m[2][3] * m[3][2];
+        const double s0 = m[2][0] * m[3][1] - m[2][1] * m[3][0];
+        const double s1 = m[2][0] * m[3][2] - m[2][2] * m[3][0];
+        const double s2 = m[2][0] * m[3][3] - m[2][3] * m[3][0];
+        const double s3 = m[2][1] * m[3][2] - m[2][2] * m[3][1];
+        const double s4 = m[2][1] * m[3][3] - m[2][3] * m[3][1];
+        const double s5 = m[2][2] * m[3][3] - m[2][3] * m[3][2];
 
-        double c0 = m[0][0] * m[1][1] - m[0][1] * m[1][0];
-        double c1 = m[0][0] * m[1][2] - m[0][2] * m[1][0];
-        double c2 = m[0][0] * m[1][3] - m[0][3] * m[1][0];
-        double c3 = m[0][1] * m[1][2] - m[0][2] * m[1][1];
-        double c4 = m[0][1] * m[1][3] - m[0][3] * m[1][1];
-        double c5 = m[0][2] * m[1][3] - m[0][3] * m[1][2];
+        const double c0 = m[0][0] * m[1][1] - m[0][1] * m[1][0];
+        const double c1 = m[0][0] * m[1][2] - m[0][2] * m[1][0];
+        const double c2 = m[0][0] * m[1][3] - m[0][3] * m[1][0];
+        const double c3 = m[0][1] * m[1][2] - m[0][2] * m[1][1];
+        const double c4 = m[0][1] * m[1][3] - m[0][3] * m[1][1];
+        const double c5 = m[0][2] * m[1][3] - m[0][3] * m[1][2];
 
         return c0 * s5 - c1 * s4 + c2 * s3 + c3 * s2 - c4 * s1 + c5 * s0;
     }
 
     [[nodiscard]] constexpr std::expected<Matrix4, MatrixError> inverse() const noexcept
     {
-        double s0 = m[2][0] * m[3][1] - m[2][1] * m[3][0];
-        double s1 = m[2][0] * m[3][2] - m[2][2] * m[3][0];
-        double s2 = m[2][0] * m[3][3] - m[2][3] * m[3][0];
-        double s3 = m[2][1] * m[3][2] - m[2][2] * m[3][1];
-        double s4 = m[2][1] * m[3][3] - m[2][3] * m[3][1];
-        double s5 = m[2][2] * m[3][3] - m[2][3] * m[3][2];
+        const double s0 = m[2][0] * m[3][1] - m[2][1] * m[3][0];
+        const double s1 = m[2][0] * m[3][2] - m[2][2] * m[3][0];
+        const double s2 = m[2][0] * m[3][3] - m[2][3] * m[3][0];
+        const double s3 = m[2][1] * m[3][2] - m[2][2] * m[3][1];
+        const double s4 = m[2][1] * m[3][3] - m[2][3] * m[3][1];
+        const double s5 = m[2][2] * m[3][3] - m[2][3] * m[3][2];
 
-        double c0 = m[0][0] * m[1][1] - m[0][1] * m[1][0];
-        double c1 = m[0][0] * m[1][2] - m[0][2] * m[1][0];
-        double c2 = m[0][0] * m[1][3] - m[0][3] * m[1][0];
-        double c3 = m[0][1] * m[1][2] - m[0][2] * m[1][1];
-        double c4 = m[0][1] * m[1][3] - m[0][3] * m[1][1];
-        double c5 = m[0][2] * m[1][3] - m[0][3] * m[1][2];
+        const double c0 = m[0][0] * m[1][1] - m[0][1] * m[1][0];
+        const double c1 = m[0][0] * m[1][2] - m[0][2] * m[1][0];
+        const double c2 = m[0][0] * m[1][3] - m[0][3] * m[1][0];
+        const double c3 = m[0][1] * m[1][2] - m[0][2] * m[1][1];
+        const double c4 = m[0][1] * m[1][3] - m[0][3] * m[1][1];
+        const double c5 = m[0][2] * m[1][3] - m[0][3] * m[1][2];
 
-        double det = c0 * s5 - c1 * s4 + c2 * s3 + c3 * s2 - c4 * s1 + c5 * s0;
+        const double det = c0 * s5 - c1 * s4 + c2 * s3 + c3 * s2 - c4 * s1 + c5 * s0;
         if (det == 0.0)
             return std::unexpected{MatrixError::singular};
 
-        double id = 1.0 / det;
+        const double id = 1.0 / det;
         return Matrix4{(m[1][1] * s5 - m[1][2] * s4 + m[1][3] * s3) * id,
                        (-m[0][1] * s5 + m[0][2] * s4 - m[0][3] * s3) * id,
                        (m[3][1] * c5 - m[3][2] * c4 + m[3][3] * c3) * id,

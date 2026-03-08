@@ -22,7 +22,14 @@ Checks: >-
   -readability-avoid-nested-conditional-operator,
   -modernize-avoid-c-arrays,
   -cppcoreguidelines-avoid-c-arrays,
-  -performance-enum-size
+  -performance-enum-size,
+  -clang-diagnostic-c++14-extensions,
+  -clang-diagnostic-constexpr-not-const,
+  -clang-diagnostic-c++20-compat,
+  -readability-convert-member-functions-to-static,
+  -readability-braces-around-statements,
+  -readability-isolate-declaration,
+  -modernize-loop-convert
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 CheckOptions:

@@ -24,13 +24,13 @@ public:
 
     [[nodiscard]] constexpr Quaternion normalized() const noexcept
     {
-        double n = norm();
+        const double n = norm();
         return (n > 0.0) ? Quaternion{w / n, x / n, y / n, z / n} : Quaternion{};
     }
 
     [[nodiscard]] constexpr Quaternion inverse() const noexcept
     {
-        double n_sq = w * w + x * x + y * y + z * z;
+        const double n_sq = w * w + x * x + y * y + z * z;
         return (n_sq > 0.0) ? Quaternion{w / n_sq, -x / n_sq, -y / n_sq, -z / n_sq} : Quaternion{};
     }
 
@@ -64,8 +64,8 @@ public:
 
     [[nodiscard]] constexpr Vector3 operator*(const Vector3 &v) const noexcept
     {
-        Quaternion v_quat{0.0, v.x, v.y, v.z};
-        Quaternion result = *this * v_quat * inverse();
+        const Quaternion v_quat{0.0, v.x, v.y, v.z};
+        const Quaternion result = *this * v_quat * inverse();
         return Vector3{result.x, result.y, result.z};
     }
 
@@ -141,12 +141,12 @@ public:
 {
     double cos_theta = a.dot(b);
 
-    Quaternion b_adj = cos_theta < 0.0 ? Quaternion{-b.w, -b.x, -b.y, -b.z} : b;
+    const Quaternion b_adj = cos_theta < 0.0 ? Quaternion{-b.w, -b.x, -b.y, -b.z} : b;
     cos_theta = cos_theta < 0.0 ? -cos_theta : cos_theta;
 
     if (cos_theta > 0.9995)
     {
-        Quaternion result{a.w + t * (b_adj.w - a.w),
+        const Quaternion result{a.w + t * (b_adj.w - a.w),
                           a.x + t * (b_adj.x - a.x),
                           a.y + t * (b_adj.y - a.y),
                           a.z + t * (b_adj.z - a.z)};

@@ -27,7 +27,7 @@ struct Vector4
 
     [[nodiscard]] constexpr Vector4 normalized() const noexcept
     {
-        double n = norm();
+        const double n = norm();
         return (n > 0.0) ? Vector4{x / n, y / n, z / n, w / n} : Vector4{};
     }
 
