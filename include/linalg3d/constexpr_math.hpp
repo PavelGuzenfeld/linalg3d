@@ -1,6 +1,6 @@
 #pragma once
-#include <gcem.hpp>
 #include <compare>
+#include <gcem.hpp>
 #include <limits>
 
 namespace linalg3d

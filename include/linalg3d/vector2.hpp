@@ -1,7 +1,7 @@
 #pragma once
 #include "constexpr_math.hpp"
-#include <gcem.hpp>
 #include <compare>
+#include <gcem.hpp>
 
 namespace linalg3d
 {
