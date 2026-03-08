@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(linalg3d VERSION 0.1.0 LANGUAGES CXX)
+project(linalg3d VERSION 0.2.0 LANGUAGES CXX)
 
 # Require C++23
 set(CMAKE_CXX_STANDARD 23)
@@ -11,7 +11,15 @@ find_package(cmake-library REQUIRED)
 find_package(fmt REQUIRED)
 find_package(gcem REQUIRED)
 
-# Runner library
+include(FetchContent)
+FetchContent_Declare(
+    doctest
+    GIT_REPOSITORY https://github.com/doctest/doctest.git
+    GIT_TAG v2.4.11
+)
+FetchContent_MakeAvailable(doctest)
+
+# Header-only library
 add_library(${PROJECT_NAME} INTERFACE)
 
 target_include_directories(${PROJECT_NAME}
@@ -58,12 +66,13 @@ install(
   DESTINATION lib/cmake/${PROJECT_NAME}
 )
 
-# Test executable
-add_executable(${PROJECT_NAME}_test test/${PROJECT_NAME}_test.cpp)
-target_link_libraries(${PROJECT_NAME}_test PRIVATE ${PROJECT_NAME} fmt gcem)
+# Tests
+enable_testing()
 
-# Ensure asserts stay enabled in tests, even in Release mode
+add_executable(${PROJECT_NAME}_test test/${PROJECT_NAME}_test.cpp)
+target_link_libraries(${PROJECT_NAME}_test PRIVATE ${PROJECT_NAME} fmt gcem doctest::doctest)
 set_warnings_and_errors(${PROJECT_NAME}_test)
+add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
 
 # Export the target
 install(

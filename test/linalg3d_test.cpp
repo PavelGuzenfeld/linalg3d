@@ -1,800 +1,878 @@
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
-#include "fmt/core.h" // fmt::print
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 #include "linalg3d/linalg.hpp"
-#include <cassert>
-#include <limits> // for std::numeric_limits
+#include "linalg3d/format.hpp"
+#include <limits>
 
-// Floating point precision tolerance
-constexpr double EPSILON = 1e-5;
+using namespace linalg3d;
 
-constexpr bool is_large(double x, double threshold = 1e6)
+// Mock strong type to test interop without depending on strong-types library
+struct MockRadian
 {
-    return x > threshold || x < -threshold;
-}
+    double val;
+    constexpr explicit MockRadian(double v) noexcept : val{v} {}
+    constexpr MockRadian() noexcept = default;
+    [[nodiscard]] constexpr double get() const noexcept { return val; }
+    constexpr auto operator<=>(const MockRadian &) const = default;
+};
+
+constexpr double EPSILON = 1e-5;
 
 constexpr bool nearly_equal(double a, double b, double tol = EPSILON)
 {
-    return (a - b < tol && b - a < tol);
+    return linalg3d::fabs(a - b) < tol;
 }
 
-constexpr void test_angle()
+// =============================================================================
+// Angle
+// =============================================================================
+
+TEST_CASE("Angle: radians <-> degrees conversion")
 {
-    using namespace linalg3d;
+    constexpr Angle<AngleType::RADIANS> rad_angle(PI);
+    constexpr auto deg_angle = rad_angle.to_degrees();
+    static_assert(linalg3d::fabs(deg_angle.value() - 180.0) < EPSILON);
 
-    // Radians to Degrees conversion
-    {
-        constexpr Angle<AngleType::RADIANS> radAngle(PI);
-        constexpr auto degAngle = radAngle.to_degrees();
-        static_assert(linalg3d::fabs(degAngle.value() - 180.0) < EPSILON, "Conversion failed");
-    }
-
-    // Degrees to Radians conversion
-    {
-        constexpr Angle<AngleType::DEGREES> degAngle(180.0);
-        constexpr auto radAngle = degAngle.to_radians();
-        static_assert(linalg3d::fabs(radAngle.value() - PI) < EPSILON, "Conversion failed");
-    }
-
-    // Identity conversion: Radians -> Degrees -> Radians
-    {
-        constexpr Angle<AngleType::RADIANS> radOrig(PI / 4.0);
-        constexpr auto deg = radOrig.to_degrees();
-        constexpr auto radAgain = deg.to_radians();
-        static_assert(linalg3d::fabs(radOrig.value() - radAgain.value()) < EPSILON, "Identity conversion failed");
-    }
-
-    // Test trigonometric functions at specific angles (radians)
-    {
-        constexpr Angle<AngleType::RADIANS> zero(0.0);
-        static_assert(zero.sin() == 0.0);
-        static_assert(zero.cos() == 1.0);
-        static_assert(zero.tan() == 0.0);
-
-        constexpr Angle<AngleType::RADIANS> halfPi(PI / 2.0);
-        static_assert(halfPi.sin() == 1.0); // sin(π/2) should be 1
-        // cos(π/2) should be 0; note that due to FP rounding it might be very small.
-        static_assert(halfPi.cos() == 0.0);
-    }
-
-    // Test negative angle conversion
-    {
-        constexpr Angle<AngleType::DEGREES> negDeg(-45.0);
-        constexpr auto negRad = negDeg.to_radians();
-        static_assert(linalg3d::fabs(negRad.value() + PI / 4.0) < EPSILON);
-    }
-
-    // Test periodicity/wrap-around: 360° -> 2π rad
-    {
-        constexpr Angle<AngleType::DEGREES> fullCircle(360.0);
-        constexpr auto radFull = fullCircle.to_radians();
-        static_assert(linalg3d::fabs(radFull.value() - 2 * PI) < EPSILON);
-    }
-
-    // Test operator overloads: addition, subtraction, multiplication, and division.
-    {
-        constexpr Angle<AngleType::RADIANS> a(PI / 3.0); // 60°
-        constexpr Angle<AngleType::RADIANS> b(PI / 6.0); // 30°
-        constexpr auto sum = a + b;                      // Expect 90° or π/2 rad.
-        constexpr auto diff = a - b;                     // Expect 30° or π/6 rad.
-        static_assert(linalg3d::fabs(sum.value() - PI / 2.0) < EPSILON);
-        static_assert(linalg3d::fabs(diff.value() - PI / 6.0) < EPSILON);
-
-        // Multiplication and division operators.
-        constexpr double scalar = 2.0;
-        constexpr double prod = a * scalar;
-        constexpr double div = a / scalar;
-        static_assert(linalg3d::fabs(prod - (PI / 3.0) * 2.0) < EPSILON);
-        static_assert(linalg3d::fabs(div - (PI / 3.0) / 2.0) < EPSILON);
-    }
-
-    // Test equality and comparisons.
-    {
-        static_assert(Angle<AngleType::RADIANS>(PI / 2.0) == PI / 2.0);
-        static_assert(Angle<AngleType::RADIANS>(PI / 2.0) != PI / 3.0);
-        static_assert(Angle<AngleType::RADIANS>(PI / 3.0) < PI / 2.0);
-    }
-
-    // Test static conversion helpers
-    {
-        constexpr auto fromRad = Angle<AngleType::RADIANS>::from_radians(PI / 2.0);
-        constexpr auto fromDeg = Angle<AngleType::DEGREES>::from_degrees(90.0);
-        static_assert(fromRad == PI / 2.0);
-        static_assert(fromDeg == 90.0);
-    }
+    constexpr Angle<AngleType::DEGREES> deg_angle2(180.0);
+    constexpr auto rad_angle2 = deg_angle2.to_radians();
+    static_assert(linalg3d::fabs(rad_angle2.value() - PI) < EPSILON);
 }
 
-constexpr void test_angle_edge_cases()
+TEST_CASE("Angle: identity conversion roundtrip")
 {
-    using namespace linalg3d;
-
-    // Negative angle conversions
-    {
-        constexpr double LOCAL_EPSILON = 1e-05;
-
-        constexpr Angle<AngleType::DEGREES> negDeg(-90.0);
-        constexpr auto negRad = negDeg.to_radians();
-        static_assert(!linalg3d::fabs(negRad.value() - PI / 2.0) < LOCAL_EPSILON && "Negative degrees to radians conversion failed");
-
-        constexpr Angle<AngleType::RADIANS> negRadOrig(-PI / 3.0);
-        constexpr auto negDegConv = negRadOrig.to_degrees();
-        static_assert(!linalg3d::fabs(negDegConv.value() - 60.0) < LOCAL_EPSILON && "Negative radians to degrees conversion failed");
-    }
-
-    // Singularities: tan() at 90° and 270° (should be infinite or undefined)
-    {
-        constexpr Angle<AngleType::DEGREES> ninety(90.0);
-        constexpr Angle<AngleType::DEGREES> twoSeventy(270.0);
-
-        static_assert(is_large(ninety.tan()) && "tan(90°) should be a large value (near infinity)");
-        static_assert(is_large(twoSeventy.tan()) && "tan(270°) should be a large value (near infinity)");
-    }
-
-    // Test absurdly large values
-    {
-        constexpr Angle<AngleType::DEGREES> absurd(1e308);
-        assert(!is_nan(absurd.to_radians().value()) && !is_inf(absurd.to_radians().value()) && "Absurdly large degrees should not break conversion");
-
-        constexpr Angle<AngleType::RADIANS> absurdRad(1e308);
-        assert(!is_nan(absurdRad.to_degrees().value()) && !is_inf(absurdRad.to_degrees().value()) && "Absurdly large radians should not break conversion");
-    }
-}
-constexpr void test_vector3()
-{
-    using namespace linalg3d;
-
-    // Default Constructor
-    {
-        static_assert(Vector3().x == 0.0 && Vector3().y == 0.0 && Vector3().z == 0.0);
-    }
-
-    // Parameterized Constructor
-    {
-        static_assert(Vector3(1.0, 2.0, 3.0).x == 1.0 && Vector3(1.0, 2.0, 3.0).y == 2.0 && Vector3(1.0, 2.0, 3.0).z == 3.0);
-    }
-
-    // Norm Test
-    {
-        constexpr Vector3 v(3.0, 4.0, 12.0);
-        constexpr double expectedNorm = 13.0;
-        // assert_near(v.norm(), expectedNorm);
-        // static_assert(linalg3d::fabs(v.norm() - expectedNorm) < EPSILON);
-        static_assert(v.norm_sq() == expectedNorm * expectedNorm, "norm() test failed");
-    }
-
-    // Zero Vector Norm
-    {
-        static_assert(Vector3(0.0, 0.0, 0.0).norm() == 0.0);
-    }
-
-    // Large Value Norm
-    {
-        constexpr double large = 1e10;
-        constexpr Vector3 v(large, large, large);
-        constexpr double expected = gcem::sqrt(3.0) * large;
-        static_assert(linalg3d::fabs(v.norm() - expected) < EPSILON);
-    }
-
-    // ---------- New Tests Below ----------
-
-    // norm_sq() Test
-    {
-        constexpr Vector3 v(3.0, 4.0, 12.0);
-        // 3^2 + 4^2 + 12^2 = 9 + 16 + 144 = 169
-        constexpr double expectedNormSq = 169.0;
-        static_assert(v.norm_sq() == expectedNormSq);
-    }
-
-    // Normalized Vector
-    {
-        constexpr Vector3 v(3.0, 4.0, 0.0);
-        constexpr Vector3 const n = v.normalized();
-        static_assert(n.x == 3.0 / 5.0);
-        static_assert(n.y == 4.0 / 5.0);
-        static_assert(n.z == 0.0);
-        static_assert(n.norm() == 1.0);
-    }
-
-    // Normalizing the Zero Vector (should return zero vector)
-    {
-        static_assert(Vector3(0.0, 0.0, 0.0).normalized() == Vector3(0.0, 0.0, 0.0));
-    }
-
-    // Dot Product Orthogonal
-    {
-        static_assert(Vector3(1.0, 0.0, 0.0).dot(Vector3(0.0, 1.0, 0.0)) == 0.0);
-        static_assert(Vector3(1.0, 0.0, 0.0).dot(Vector3(0.0, 0.0, 1.0)) == 0.0);
-    }
-
-    // Dot Product Parallel
-    {
-        constexpr Vector3 v1(2.0, 2.0, 1.0);
-        // 2*6 + 2*6 + 1*3 = 27
-        static_assert(v1.dot(v1 * 3.0) == 27.0);
-    }
-
-    // Cross Product Parallel Vectors (should return zero vector)
-    {
-        constexpr Vector3 v1(1.0, 2.0, 3.0);
-        static_assert(v1.cross(v1 * 2.0) == Vector3(0.0, 0.0, 0.0));
-    }
-
-    // Cross Product Orthogonal Vectors
-    {
-        constexpr Vector3 i(1.0, 0.0, 0.0);
-        // (1,0,0) x (0,1,0) = (0,0,1)
-        static_assert(i.cross(Vector3{0.0, 1.0, 0.0}) == Vector3(0.0, 0.0, 1.0));
-    }
+    constexpr Angle<AngleType::RADIANS> orig(PI / 4.0);
+    constexpr auto deg = orig.to_degrees();
+    constexpr auto back = deg.to_radians();
+    static_assert(linalg3d::fabs(orig.value() - back.value()) < EPSILON);
 }
 
-constexpr void test_vector3_operators()
+TEST_CASE("Angle: trig functions")
 {
-    using namespace linalg3d;
+    constexpr Angle<AngleType::RADIANS> zero(0.0);
+    static_assert(zero.sin() == 0.0);
+    static_assert(zero.cos() == 1.0);
+    static_assert(zero.tan() == 0.0);
 
-    // Addition Operator
-    {
-        // (1+4, 2+5, 3+6) = (5, 7, 9)
-        static_assert((Vector3(1.0, 2.0, 3.0) + Vector3(4.0, 5.0, 6.0)) == Vector3(5.0, 7.0, 9.0));
-    }
-
-    // Subtraction Operator
-    {
-        // (5-1, 7-2, 9-3) = (4, 5, 6)
-        static_assert((Vector3(5.0, 7.0, 9.0) - Vector3(1.0, 2.0, 3.0)) == Vector3(4.0, 5.0, 6.0));
-    }
-
-    // Unary Minus Operator
-    {
-        // -(1,-2,3) = (-1,2,-3)
-        static_assert((-Vector3(1.0, -2.0, 3.0)) == Vector3(-1.0, 2.0, -3.0));
-    }
-
-    // Scalar Multiplication
-    {
-        constexpr Vector3 v(1.0, -2.0, 3.0);
-        constexpr Vector3 result = v * -1.5;
-        // (1 * -1.5, -2 * -1.5, 3 * -1.5) = (-1.5, 3.0, -4.5)
-        static_assert(result == Vector3(-1.5, 3.0, -4.5));
-    }
-
-    // Division Operator
-    {
-        constexpr Vector3 v(2.0, -4.0, 6.0);
-        constexpr double scalar = 2.0;
-        constexpr Vector3 result = v / scalar;
-        // (2/2, -4/2, 6/2) = (1, -2, 3)
-        static_assert(result == Vector3(1.0, -2.0, 3.0));
-
-        // Optional check: dividing by zero would cause a float exception,
-        // so typically you ensure scalar != 0 before dividing.
-        // e.g. Vector3 invalidResult = v / 0.0; // not recommended
-    }
+    constexpr Angle<AngleType::RADIANS> half_pi(PI / 2.0);
+    static_assert(half_pi.sin() == 1.0);
+    static_assert(half_pi.cos() == 0.0);
 }
 
-constexpr void test_vector3_compare_operators()
+TEST_CASE("Angle: operators")
 {
-    using namespace linalg3d;
-    // Three-way Comparison Operator
-    {
-        constexpr Vector3 a(1.0, 2.0, 3.0);
-        constexpr Vector3 b(1.0, 2.0, 3.0);
-        constexpr Vector3 c(1.0, 2.0, 4.0);
-
-        // Equality check
-        static_assert((a <=> b) == 0);
-        // Not equal
-        static_assert((a <=> c) != 0);
-
-        // Lexicographical ordering check (operator<=> default):
-        // a = (1,2,3), c = (1,2,4)
-        // Compare x: 1 == 1 -> compare y: 2 == 2 -> compare z: 3 < 4 => a < c
-        static_assert((a <=> c) < 0); // means a < c
-    }
-
-    // Lexicographical Ordering
-    {
-        constexpr Vector3 a(1.0, 2.0, 3.0);
-        constexpr Vector3 b(1.0, 2.0, 3.0);
-        constexpr Vector3 c(1.0, 2.0, 4.0);
-
-        // a = (1,2,3), b = (1,2,3)
-        // Compare x: 1 == 1 -> compare y: 2 == 2 -> compare z: 3 == 3 => a == b
-        static_assert(!(a < b) && !(b < a));
-        // a = (1,2,3), c = (1,2,4)
-        // Compare x: 1 == 1 -> compare y: 2 == 2 -> compare z: 3 < 4 => a < c
-        static_assert(a < c);
-        // a = (1,2,3), b = (1,2,3)
-        // Compare x: 1 == 1 -> compare y: 2 == 2 -> compare z: 3 == 3 => a <= b
-        static_assert(!(a < b) && (a <= b));
-        // a = (1,2,3), c = (1,2,4)
-        // Compare x: 1 == 1 -> compare y: 2 == 2 -> compare z: 3 < 4 => a <= c
-        static_assert(a <= c);
-    }
-
-    // Operator == and !=
-    {
-        constexpr Vector3 a(1.0, 2.0, 3.0);
-        constexpr Vector3 b(1.0, 2.0, 3.0);
-        constexpr Vector3 c(1.0, 2.0, 4.0);
-
-        // Equality check
-        static_assert(a == b);
-        static_assert(a != c);
-    }
-
-    // Operator <
-    {
-        constexpr Vector3 a(1.0, 2.0, 3.0);
-        constexpr Vector3 b(1.0, 2.0, 3.0);
-        constexpr Vector3 c(1.0, 2.0, 4.0);
-
-        // a = (1,2,3), b = (1,2,3)
-        // Compare x: 1 == 1 -> compare y: 2 == 2 -> compare z: 3 == 3 => a == b
-        static_assert(!(a < b) && !(b < a));
-        // a = (1,2,3), c = (1,2,4)
-        // Compare x: 1 == 1 -> compare y: 2 == 2 -> compare z: 3 < 4 => a < c
-        static_assert(a < c);
-    }
-
-    // Operator <=
-    {
-        constexpr Vector3 a(1.0, 2.0, 3.0);
-        constexpr Vector3 b(1.0, 2.0, 3.0);
-        constexpr Vector3 c(1.0, 2.0, 4.0);
-
-        // a = (1,2,3), b = (1,2,3)
-        // Compare x: 1 == 1 -> compare y: 2 == 2 -> compare z: 3 == 3 => a <= b
-        static_assert(a <= b);
-        // a = (1,2,3), c = (1,2,4)
-        // Compare x: 1 == 1 -> compare y: 2 == 2 -> compare z: 3 < 4 => a <= c
-        static_assert(a <= c);
-    }
-
-    // Operator >
-    {
-        constexpr Vector3 a(1.0, 2.0, 3.0);
-        constexpr Vector3 b(1.0, 2.0, 3.0);
-        constexpr Vector3 c(1.0, 2.0, 4.0);
-
-        // a = (1,2,3), b = (1,2,3)
-        // Compare x: 1 == 1 -> compare y: 2 == 2 -> compare z: 3 == 3 => !(a > b)
-        static_assert(!(a > b));
-        // a = (1,2,3), c = (1,2,4)
-        // Compare x: 1 == 1 -> compare y: 2 == 2 -> compare z: 3 < 4 => !(a > c)
-        static_assert(!(a > c));
-    }
-
-    // Operator >=
-    {
-        constexpr Vector3 a(1.0, 2.0, 3.0);
-        constexpr Vector3 b(1.0, 2.0, 3.0);
-        constexpr Vector3 c(1.0, 2.0, 4.0);
-
-        // a = (1,2,3), b = (1,2,3)
-        // Compare x: 1 == 1 -> compare y: 2 == 2 -> compare z: 3 == 3 => a >= b
-        static_assert(a >= b);
-        // a = (1,2,3), c = (1,2,4)
-        // Compare x: 1 == 1 -> compare y: 2 == 2 -> compare z: 3 < 4 => !(a >= c)
-        static_assert(!(a >= c));
-    }
+    constexpr Angle<AngleType::RADIANS> a(PI / 3.0);
+    constexpr Angle<AngleType::RADIANS> b(PI / 6.0);
+    static_assert(linalg3d::fabs((a + b).value() - PI / 2.0) < EPSILON);
+    static_assert(linalg3d::fabs((a - b).value() - PI / 6.0) < EPSILON);
+    static_assert(linalg3d::fabs(a * 2.0 - (PI / 3.0) * 2.0) < EPSILON);
+    static_assert(linalg3d::fabs(a / 2.0 - (PI / 3.0) / 2.0) < EPSILON);
 }
 
-constexpr void test_matrix3x3()
+TEST_CASE("Angle: comparisons")
 {
-    using namespace linalg3d;
-
-    // Default Constructor
-    {
-        constexpr Matrix3 m;
-        constexpr bool all_zero = [&m]() -> bool
-        {
-            for (std::size_t i = 0; i < 3; ++i)
-            {
-                for (std::size_t j = 0; j < 3; ++j)
-                {
-                    if (m.m[i][j] != 0.0)
-                        return false;
-                }
-            }
-            return true;
-        }();
-        static_assert(all_zero, "default matrix is not zero");
-    }
-
-    // Parameterized Constructor
-    {
-        constexpr Matrix3 m(1.0, 2.0, 3.0,
-                            4.0, 5.0, 6.0,
-                            7.0, 8.0, 9.0);
-        static_assert(m.m[0][0] == 1.0 && m.m[0][1] == 2.0 && m.m[0][2] == 3.0);
-        static_assert(m.m[1][0] == 4.0 && m.m[1][1] == 5.0 && m.m[1][2] == 6.0);
-        static_assert(m.m[2][0] == 7.0 && m.m[2][1] == 8.0 && m.m[2][2] == 9.0);
-    }
-
-    // Brace-enclosed Constructor
-    {
-        constexpr Matrix3 m{1.0, 2.0, 3.0,
-                            4.0, 5.0, 6.0,
-                            7.0, 8.0, 9.0};
-        static_assert(m.m[0][0] == 1.0 && m.m[0][1] == 2.0 && m.m[0][2] == 3.0);
-        static_assert(m.m[1][0] == 4.0 && m.m[1][1] == 5.0 && m.m[1][2] == 6.0);
-        static_assert(m.m[2][0] == 7.0 && m.m[2][1] == 8.0 && m.m[2][2] == 9.0);
-    }
-
-    // Transpose Test
-    {
-        constexpr Matrix3 m(1.0, 2.0, 3.0,
-                            4.0, 5.0, 6.0,
-                            7.0, 8.0, 9.0);
-        static_assert(m.transpose() == Matrix3(1.0, 4.0, 7.0,
-                                               2.0, 5.0, 8.0,
-                                               3.0, 6.0, 9.0));
-    }
+    static_assert(Angle<AngleType::RADIANS>(PI / 2.0) == PI / 2.0);
+    static_assert(Angle<AngleType::RADIANS>(PI / 2.0) != PI / 3.0);
+    static_assert(Angle<AngleType::RADIANS>(PI / 3.0) < PI / 2.0);
 }
 
-constexpr void test_euler_angles()
+TEST_CASE("Angle: static helpers")
 {
-    using namespace linalg3d;
-
-    // Default Constructor
-    {
-        constexpr EulerAngles<AngleType::RADIANS> e;
-        static_assert(e.pitch == 0.0 && e.yaw == 0.0 && e.roll == 0.0);
-    }
-
-    // Parameterized Constructor
-    {
-        constexpr EulerAngles e(1.0, 2.0, 3.0);
-        static_assert(e.pitch == 1.0 && e.yaw == 2.0 && e.roll == 3.0);
-    }
-
-    // Brace-enclosed Constructor
-    {
-        constexpr EulerAngles e{1.0, 2.0, 3.0};
-        static_assert(e.pitch == 1.0 && e.yaw == 2.0 && e.roll == 3.0);
-    }
+    static_assert(Angle<AngleType::RADIANS>::from_radians(PI / 2.0) == PI / 2.0);
+    static_assert(Angle<AngleType::DEGREES>::from_degrees(90.0) == 90.0);
 }
 
-constexpr void test_quaternion()
+TEST_CASE("Angle: negative conversion")
 {
-    using namespace linalg3d;
-
-    // Default Constructor
-    {
-        constexpr Quaternion q;
-        static_assert(q.w == 0.0 && q.x == 0.0 && q.y == 0.0 && q.z == 0.0);
-    }
-
-    // Parameterized Constructor
-    {
-        constexpr Quaternion q(1.0, 2.0, 3.0, 4.0);
-        static_assert(q.w == 1.0 && q.x == 2.0 && q.y == 3.0 && q.z == 4.0);
-    }
-
-    // Normalized Quaternion
-    {
-        constexpr Quaternion q(1.0, 2.0, 3.0, 4.0);
-        constexpr Quaternion n = q.normalized();
-        constexpr double expectedNorm = gcem::sqrt(1.0 + 4.0 + 9.0 + 16.0);
-
-        static_assert(n.w == 1.0 / expectedNorm);
-        static_assert(n.x == 2.0 / expectedNorm);
-        static_assert(n.y == 3.0 / expectedNorm);
-        static_assert(n.z == 4.0 / expectedNorm);
-    }
-
-    // Inverse Quaternion
-    {
-        constexpr Quaternion q(1.0, 2.0, 3.0, 4.0);
-        constexpr Quaternion inv = q.inverse();
-        constexpr double n_sq = 1.0 + 4.0 + 9.0 + 16.0;
-
-        static_assert(inv.w == 1.0 / n_sq);
-        static_assert(inv.x == -2.0 / n_sq);
-        static_assert(inv.y == -3.0 / n_sq);
-        static_assert(inv.z == -4.0 / n_sq);
-    }
-
-    // Dot Product
-    {
-        constexpr Quaternion q1(1.0, 2.0, 3.0, 4.0);
-        constexpr Quaternion q2(5.0, 6.0, 7.0, 8.0);
-        constexpr double dot = q1.dot(q2);
-        constexpr double expected = 1.0 * 5.0 + 2.0 * 6.0 + 3.0 * 7.0 + 4.0 * 8.0;
-        // assert_near(dot, expected);
-
-        static_assert(dot == expected);
-    }
-
-    // Quaternion Multiplication
-    {
-        constexpr Quaternion q1(1.0, 2.0, 3.0, 4.0);
-        constexpr Quaternion q2(5.0, 6.0, 7.0, 8.0);
-        constexpr Quaternion result = q1 * q2;
-
-        static_assert(result.w == -60.0);
-        static_assert(result.x == 12.0);
-        static_assert(result.y == 30.0);
-        static_assert(result.z == 24.0);
-    }
-
-    // Vector Rotation by Quaternion
-    {
-        // Create a quaternion representing a 90° (pi/2) rotation around the z-axis.
-        constexpr double angle = PI / 2.0;
-        constexpr double cos_val = gcem::cos(angle / 2.0);
-        constexpr double sin_val = gcem::sin(angle / 2.0);
-        constexpr Quaternion q(cos_val, 0.0, 0.0, sin_val); // axis (0, 0, 1)
-
-        // Original vector (1, 0, 0)
-        constexpr Vector3 v(1.0, 0.0, 0.0);
-
-        // Rotate the vector using the quaternion.
-        constexpr Vector3 rotated = q * v;
-
-        // The expected result of rotating (1,0,0) 90° around z-axis is (0, 1, 0).
-
-        static_assert(rotated.x == 0.0);
-        static_assert(rotated.y == 1.0);
-        static_assert(rotated.z == 0.0);
-    }
+    constexpr Angle<AngleType::DEGREES> neg_deg(-90.0);
+    constexpr auto neg_rad = neg_deg.to_radians();
+    static_assert(linalg3d::fabs(neg_rad.value() + PI / 2.0) < EPSILON);
 }
 
-constexpr void test_operations()
+TEST_CASE("Angle: large value sanitization")
 {
-    using namespace linalg3d;
+    Angle<AngleType::DEGREES> absurd(1e308);
+    CHECK_FALSE(is_nan(absurd.to_radians().value()));
+    CHECK_FALSE(is_inf(absurd.to_radians().value()));
 
-    // Vector3 and Quaternion Multiplication
-    {
-        constexpr Vector3 v(1.0, 2.0, 3.0);
-        constexpr Quaternion q(1.0, 2.0, 3.0, 4.0);
-        constexpr Vector3 result = v * q;
-
-        assert(!(linalg3d::fabs(result.x - 20.0) < EPSILON) && "value is out of expected range");
-        assert(!(linalg3d::fabs(result.y - 16.0) < EPSILON) && "value is out of expected range");
-        assert(!(linalg3d::fabs(result.z - 24.0) < EPSILON) && "value is out of expected range");
-    }
-
-    // Quaternion to Rotation Matrix
-    {
-        constexpr Quaternion q(1.0, 2.0, 3.0, 4.0);
-        constexpr Matrix3 m = quaternionToMatrix(q);
-        assert(!(m == Matrix3(-7.0, 8.0, 3.0,
-                              6.0, 5.0, -4.0,
-                              9.0, 2.0, -1.0) &&
-                 "value is out of expected range for matrix"));
-    }
-
-    // Quaternion from Euler Angles
-    {
-        constexpr EulerAngles e(1.0, 2.0, 3.0);
-        constexpr Quaternion q = eulerAnglesToQuaternion(e);
-        assert(!(q == Quaternion(0.983347, 0.034270, 0.106020, 0.143572) && "value is out of expected range for quaternion"));
-    }
-
-    // Euler Angles from Quaternion
-    {
-        constexpr Quaternion q(0.983347, 0.034270, 0.106020, 0.143572);
-        constexpr EulerAngles e = quaternionToEulerAngles(q);
-        assert(!(linalg3d::fabs(e.pitch.value() - 1.0) < EPSILON) && "value is out of expected range for pitch");
-    }
-
-    // Quaternion Multiplication Identity
-    {
-        constexpr Quaternion q(1.0, 2.0, 3.0, 4.0);
-        static_assert(q == q * Quaternion::identity());
-    }
-
-    // Quaternion Multiplication Associativity
-    {
-        constexpr Quaternion q1(1.0, 2.0, 3.0, 4.0);
-        constexpr Quaternion q2(5.0, 6.0, 7.0, 8.0);
-        constexpr Quaternion q3(9.0, 10.0, 11.0, 12.0);
-        static_assert((q1 * q2) * q3 == q1 * (q2 * q3));
-    }
-
-    // Quaternion Multiplication Distributivity
-    {
-        constexpr Quaternion q1(1.0, 2.0, 3.0, 4.0);
-        constexpr Quaternion q2(5.0, 6.0, 7.0, 8.0);
-        constexpr Quaternion q3(9.0, 10.0, 11.0, 12.0);
-        static_assert(q1 * (q2 + q3) == q1 * q2 + q1 * q3);
-    }
+    Angle<AngleType::RADIANS> absurd_rad(1e308);
+    CHECK_FALSE(is_nan(absurd_rad.to_degrees().value()));
+    CHECK_FALSE(is_inf(absurd_rad.to_degrees().value()));
 }
 
-constexpr void test_matrix_vector_multiplication()
+TEST_CASE("Angle: NaN/Inf sanitization")
 {
-    using namespace linalg3d;
+    constexpr Angle<AngleType::RADIANS> nan_angle(std::numeric_limits<double>::quiet_NaN());
+    static_assert(nan_angle.value() == 0.0);
+
+    constexpr Angle<AngleType::RADIANS> inf_angle(std::numeric_limits<double>::infinity());
+    static_assert(inf_angle.value() == 0.0);
+}
+
+// =============================================================================
+// Vector2
+// =============================================================================
+
+TEST_CASE("Vector2: construction and basic ops")
+{
+    static_assert(Vector2().x == 0.0 && Vector2().y == 0.0);
+    static_assert(Vector2(3.0, 4.0).norm_sq() == 25.0);
+    static_assert(Vector2(0.0, 0.0).norm() == 0.0);
+}
+
+TEST_CASE("Vector2: dot and cross")
+{
+    static_assert(Vector2(1.0, 0.0).dot(Vector2(0.0, 1.0)) == 0.0);
+    static_assert(Vector2(1.0, 0.0).cross(Vector2(0.0, 1.0)) == 1.0);
+    static_assert(Vector2(0.0, 1.0).cross(Vector2(1.0, 0.0)) == -1.0);
+}
+
+TEST_CASE("Vector2: arithmetic")
+{
+    static_assert((Vector2(1.0, 2.0) + Vector2(3.0, 4.0)) == Vector2(4.0, 6.0));
+    static_assert((Vector2(5.0, 7.0) - Vector2(1.0, 2.0)) == Vector2(4.0, 5.0));
+    static_assert((-Vector2(1.0, -2.0)) == Vector2(-1.0, 2.0));
+    static_assert((Vector2(2.0, 3.0) * 2.0) == Vector2(4.0, 6.0));
+    static_assert((Vector2(4.0, 6.0) / 2.0) == Vector2(2.0, 3.0));
+}
+
+TEST_CASE("Vector2: compound assignment")
+{
+    Vector2 v(1.0, 2.0);
+    v += Vector2(3.0, 4.0);
+    CHECK(v == Vector2(4.0, 6.0));
+    v -= Vector2(1.0, 1.0);
+    CHECK(v == Vector2(3.0, 5.0));
+    v *= 2.0;
+    CHECK(v == Vector2(6.0, 10.0));
+    v /= 2.0;
+    CHECK(v == Vector2(3.0, 5.0));
+}
+
+TEST_CASE("Vector2: normalized")
+{
+    constexpr Vector2 v(3.0, 4.0);
+    constexpr auto n = v.normalized();
+    static_assert(n.x == 3.0 / 5.0);
+    static_assert(n.y == 4.0 / 5.0);
+    static_assert(Vector2(0.0, 0.0).normalized() == Vector2(0.0, 0.0));
+}
+
+TEST_CASE("Vector2: comparison")
+{
+    static_assert(Vector2(1.0, 2.0) == Vector2(1.0, 2.0));
+    static_assert(Vector2(1.0, 2.0) != Vector2(1.0, 3.0));
+    static_assert(Vector2(1.0, 2.0) < Vector2(1.0, 3.0));
+    static_assert(Vector2(1.0, 2.0) <= Vector2(1.0, 2.0));
+}
+
+// =============================================================================
+// Vector3
+// =============================================================================
+
+TEST_CASE("Vector3: construction")
+{
+    static_assert(Vector3().x == 0.0 && Vector3().y == 0.0 && Vector3().z == 0.0);
+    static_assert(Vector3(1.0, 2.0, 3.0).x == 1.0);
+}
+
+TEST_CASE("Vector3: norm")
+{
+    constexpr Vector3 v(3.0, 4.0, 12.0);
+    static_assert(v.norm_sq() == 169.0);
+    static_assert(Vector3(0.0, 0.0, 0.0).norm() == 0.0);
+}
+
+TEST_CASE("Vector3: normalized")
+{
+    constexpr Vector3 v(3.0, 4.0, 0.0);
+    constexpr auto n = v.normalized();
+    static_assert(n.x == 3.0 / 5.0 && n.y == 4.0 / 5.0 && n.z == 0.0);
+    static_assert(Vector3(0.0, 0.0, 0.0).normalized() == Vector3(0.0, 0.0, 0.0));
+}
+
+TEST_CASE("Vector3: dot product")
+{
+    static_assert(Vector3(1.0, 0.0, 0.0).dot(Vector3(0.0, 1.0, 0.0)) == 0.0);
+    constexpr Vector3 v1(2.0, 2.0, 1.0);
+    static_assert(v1.dot(v1 * 3.0) == 27.0);
+}
+
+TEST_CASE("Vector3: cross product")
+{
+    constexpr Vector3 v1(1.0, 2.0, 3.0);
+    static_assert(v1.cross(v1 * 2.0) == Vector3(0.0, 0.0, 0.0));
+    static_assert(Vector3(1.0, 0.0, 0.0).cross(Vector3{0.0, 1.0, 0.0}) == Vector3(0.0, 0.0, 1.0));
+}
+
+TEST_CASE("Vector3: arithmetic")
+{
+    static_assert((Vector3(1.0, 2.0, 3.0) + Vector3(4.0, 5.0, 6.0)) == Vector3(5.0, 7.0, 9.0));
+    static_assert((Vector3(5.0, 7.0, 9.0) - Vector3(1.0, 2.0, 3.0)) == Vector3(4.0, 5.0, 6.0));
+    static_assert((-Vector3(1.0, -2.0, 3.0)) == Vector3(-1.0, 2.0, -3.0));
+    static_assert((Vector3(1.0, -2.0, 3.0) * -1.5) == Vector3(-1.5, 3.0, -4.5));
+    static_assert((Vector3(2.0, -4.0, 6.0) / 2.0) == Vector3(1.0, -2.0, 3.0));
+}
+
+TEST_CASE("Vector3: compound assignment")
+{
+    Vector3 v(1.0, 2.0, 3.0);
+    v += Vector3(4.0, 5.0, 6.0);
+    CHECK(v == Vector3(5.0, 7.0, 9.0));
+    v -= Vector3(1.0, 1.0, 1.0);
+    CHECK(v == Vector3(4.0, 6.0, 8.0));
+    v *= 0.5;
+    CHECK(v == Vector3(2.0, 3.0, 4.0));
+    v /= 2.0;
+    CHECK(v == Vector3(1.0, 1.5, 2.0));
+}
+
+TEST_CASE("Vector3: comparison operators")
+{
+    constexpr Vector3 a(1.0, 2.0, 3.0);
+    constexpr Vector3 b(1.0, 2.0, 3.0);
+    constexpr Vector3 c(1.0, 2.0, 4.0);
+
+    static_assert(a == b);
+    static_assert(a != c);
+    static_assert(a < c);
+    static_assert(a <= b);
+    static_assert(a <= c);
+    static_assert(!(a > b));
+    static_assert(a >= b);
+    static_assert(!(a >= c));
+    static_assert((a <=> b) == 0);
+    static_assert((a <=> c) < 0);
+}
+
+TEST_CASE("Vector3: normalization safety")
+{
+    constexpr Vector3 small_vec(1e-200, 1e-200, 1e-200);
+    constexpr auto normed = small_vec.normalized();
+    static_assert(!is_nan(normed.x) && !is_nan(normed.y) && !is_nan(normed.z));
+}
+
+// =============================================================================
+// Vector4
+// =============================================================================
+
+TEST_CASE("Vector4: construction and basic ops")
+{
+    static_assert(Vector4().x == 0.0 && Vector4().y == 0.0 && Vector4().z == 0.0 && Vector4().w == 0.0);
+    static_assert(Vector4(1.0, 2.0, 3.0, 4.0).norm_sq() == 30.0);
+}
+
+TEST_CASE("Vector4: dot product")
+{
+    constexpr Vector4 a(1.0, 2.0, 3.0, 4.0);
+    constexpr Vector4 b(5.0, 6.0, 7.0, 8.0);
+    static_assert(a.dot(b) == 70.0);
+}
+
+TEST_CASE("Vector4: arithmetic")
+{
+    static_assert((Vector4(1.0, 2.0, 3.0, 4.0) + Vector4(5.0, 6.0, 7.0, 8.0)) == Vector4(6.0, 8.0, 10.0, 12.0));
+    static_assert((Vector4(5.0, 6.0, 7.0, 8.0) - Vector4(1.0, 2.0, 3.0, 4.0)) == Vector4(4.0, 4.0, 4.0, 4.0));
+    static_assert((-Vector4(1.0, -2.0, 3.0, -4.0)) == Vector4(-1.0, 2.0, -3.0, 4.0));
+    static_assert((Vector4(1.0, 2.0, 3.0, 4.0) * 2.0) == Vector4(2.0, 4.0, 6.0, 8.0));
+    static_assert((Vector4(2.0, 4.0, 6.0, 8.0) / 2.0) == Vector4(1.0, 2.0, 3.0, 4.0));
+}
+
+TEST_CASE("Vector4: compound assignment")
+{
+    Vector4 v(1.0, 2.0, 3.0, 4.0);
+    v += Vector4(1.0, 1.0, 1.0, 1.0);
+    CHECK(v == Vector4(2.0, 3.0, 4.0, 5.0));
+    v *= 2.0;
+    CHECK(v == Vector4(4.0, 6.0, 8.0, 10.0));
+}
+
+TEST_CASE("Vector4: normalized")
+{
+    constexpr auto n = Vector4(0.0, 0.0, 0.0, 0.0).normalized();
+    static_assert(n == Vector4(0.0, 0.0, 0.0, 0.0));
+}
+
+TEST_CASE("Vector4: comparison")
+{
+    static_assert(Vector4(1.0, 2.0, 3.0, 4.0) == Vector4(1.0, 2.0, 3.0, 4.0));
+    static_assert(Vector4(1.0, 2.0, 3.0, 4.0) != Vector4(1.0, 2.0, 3.0, 5.0));
+    static_assert(Vector4(1.0, 2.0, 3.0, 4.0) < Vector4(1.0, 2.0, 3.0, 5.0));
+}
+
+// =============================================================================
+// Matrix2
+// =============================================================================
+
+TEST_CASE("Matrix2: construction")
+{
+    constexpr Matrix2 m;
+    static_assert(m.m[0][0] == 0.0 && m.m[0][1] == 0.0 && m.m[1][0] == 0.0 && m.m[1][1] == 0.0);
+
+    constexpr Matrix2 m2(1.0, 2.0, 3.0, 4.0);
+    static_assert(m2.m[0][0] == 1.0 && m2.m[0][1] == 2.0 && m2.m[1][0] == 3.0 && m2.m[1][1] == 4.0);
+}
+
+TEST_CASE("Matrix2: identity")
+{
+    constexpr auto id = Matrix2::identity();
+    static_assert(id.m[0][0] == 1.0 && id.m[0][1] == 0.0 && id.m[1][0] == 0.0 && id.m[1][1] == 1.0);
+}
+
+TEST_CASE("Matrix2: determinant")
+{
+    static_assert(Matrix2(1.0, 2.0, 3.0, 4.0).determinant() == -2.0);
+    static_assert(Matrix2::identity().determinant() == 1.0);
+    static_assert(Matrix2(1.0, 2.0, 2.0, 4.0).determinant() == 0.0);
+}
+
+TEST_CASE("Matrix2: transpose")
+{
+    static_assert(Matrix2(1.0, 2.0, 3.0, 4.0).transpose() == Matrix2(1.0, 3.0, 2.0, 4.0));
+}
+
+TEST_CASE("Matrix2: inverse")
+{
+    constexpr auto inv = Matrix2::identity().inverse();
+    static_assert(inv.has_value());
+    static_assert(inv.value() == Matrix2::identity());
+
+    constexpr auto singular = Matrix2(1.0, 2.0, 2.0, 4.0).inverse();
+    static_assert(!singular.has_value());
+}
+
+TEST_CASE("Matrix2: arithmetic")
+{
+    constexpr Matrix2 a(1.0, 2.0, 3.0, 4.0);
+    constexpr Matrix2 b(5.0, 6.0, 7.0, 8.0);
+    static_assert((a + b) == Matrix2(6.0, 8.0, 10.0, 12.0));
+    static_assert((a * 2.0) == Matrix2(2.0, 4.0, 6.0, 8.0));
+}
+
+TEST_CASE("Matrix2: multiplication")
+{
+    constexpr Matrix2 a(1.0, 2.0, 3.0, 4.0);
+    constexpr Matrix2 b(5.0, 6.0, 7.0, 8.0);
+    constexpr auto c = a * b;
+    static_assert(c == Matrix2(19.0, 22.0, 43.0, 50.0));
+}
+
+TEST_CASE("Matrix2: compound assignment")
+{
+    Matrix2 m(1.0, 2.0, 3.0, 4.0);
+    m += Matrix2(1.0, 1.0, 1.0, 1.0);
+    CHECK(m == Matrix2(2.0, 3.0, 4.0, 5.0));
+    m *= 2.0;
+    CHECK(m == Matrix2(4.0, 6.0, 8.0, 10.0));
+}
+
+TEST_CASE("Matrix2 * Vector2")
+{
+    constexpr auto id = Matrix2::identity();
+    constexpr Vector2 v(3.0, 4.0);
+    static_assert((id * v) == v);
+
+    constexpr Matrix2 m(2.0, 0.0, 0.0, 3.0);
+    static_assert((m * v) == Vector2(6.0, 12.0));
+}
+
+// =============================================================================
+// Matrix3
+// =============================================================================
+
+TEST_CASE("Matrix3: construction")
+{
+    constexpr Matrix3 m;
+    constexpr bool all_zero = [&m]()
     {
-        // Test 1: Basic multiplication.
-        // Matrix:
-        // [ 1  2  3 ]
-        // [ 4  5  6 ]
-        // [ 7  8  9 ]
-        // Vector: (1, 1, 1)
-        // Expected result: (6, 15, 24)
-        constexpr Matrix3 m(1.0, 2.0, 3.0,
-                            4.0, 5.0, 6.0,
-                            7.0, 8.0, 9.0);
-        constexpr Vector3 v(1.0, 1.0, 1.0);
-        constexpr Vector3 result = m * v;
-        static_assert(nearly_equal(result.x, 6.0), "Matrix-Vector multiplication failed for x component");
-        static_assert(nearly_equal(result.y, 15.0), "Matrix-Vector multiplication failed for y component");
-        static_assert(nearly_equal(result.z, 24.0), "Matrix-Vector multiplication failed for z component");
-    }
-    // Test 2: Multiplication with the identity matrix.
-    // Identity matrix should leave the vector unchanged.
-    constexpr Matrix3 identity(1.0, 0.0, 0.0,
-                               0.0, 1.0, 0.0,
-                               0.0, 0.0, 1.0);
+        for (int i = 0; i < 3; ++i)
+            for (int j = 0; j < 3; ++j)
+                if (m.m[i][j] != 0.0)
+                    return false;
+        return true;
+    }();
+    static_assert(all_zero);
+}
+
+TEST_CASE("Matrix3: identity")
+{
+    constexpr auto id = Matrix3::identity();
+    static_assert(id.m[0][0] == 1.0 && id.m[1][1] == 1.0 && id.m[2][2] == 1.0);
+    static_assert(id.m[0][1] == 0.0 && id.m[0][2] == 0.0);
+}
+
+TEST_CASE("Matrix3: transpose")
+{
+    constexpr Matrix3 m(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
+    static_assert(m.transpose() == Matrix3(1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0));
+}
+
+TEST_CASE("Matrix3: determinant")
+{
+    constexpr Matrix3 singular(1.0, 2.0, 3.0, 2.0, 4.0, 6.0, 3.0, 6.0, 9.0);
+    static_assert(singular.determinant() == 0.0);
+    static_assert(Matrix3::identity().determinant() == 1.0);
+}
+
+TEST_CASE("Matrix3: inverse with std::expected")
+{
+    constexpr auto id_inv = Matrix3::identity().inverse();
+    static_assert(id_inv.has_value());
+    static_assert(id_inv.value() == Matrix3::identity());
+
+    constexpr Matrix3 singular(1.0, 2.0, 3.0, 2.0, 4.0, 6.0, 3.0, 6.0, 9.0);
+    constexpr auto singular_inv = singular.inverse();
+    static_assert(!singular_inv.has_value());
+}
+
+TEST_CASE("Matrix3: inverse correctness")
+{
+    constexpr Matrix3 m(2.0, -1.0, 0.0, -1.0, 2.0, -1.0, 0.0, -1.0, 2.0);
+    constexpr auto inv = m.inverse();
+    static_assert(inv.has_value());
+
+    constexpr Matrix3 result = m * inv.value();
+    static_assert(nearly_equal(result.m[0][0], 1.0));
+    static_assert(nearly_equal(result.m[1][1], 1.0));
+    static_assert(nearly_equal(result.m[2][2], 1.0));
+    static_assert(nearly_equal(result.m[0][1], 0.0));
+}
+
+TEST_CASE("Matrix3: compound assignment")
+{
+    Matrix3 m(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+    m *= 3.0;
+    CHECK(m == Matrix3(3.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 3.0));
+}
+
+TEST_CASE("Matrix3 * Vector3")
+{
+    constexpr Matrix3 m(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
+    constexpr Vector3 v(1.0, 1.0, 1.0);
+    constexpr auto result = m * v;
+    static_assert(nearly_equal(result.x, 6.0));
+    static_assert(nearly_equal(result.y, 15.0));
+    static_assert(nearly_equal(result.z, 24.0));
+
+    constexpr auto id = Matrix3::identity();
     constexpr Vector3 v2(3.14, -2.71, 0.0);
-    constexpr Vector3 result2 = identity * v2;
-    static_assert(nearly_equal(result2.x, v2.x), "Identity matrix multiplication failed for x component");
-    static_assert(nearly_equal(result2.y, v2.y), "Identity matrix multiplication failed for y component");
-    static_assert(nearly_equal(result2.z, v2.z), "Identity matrix multiplication failed for z component");
-
-    // Test 3: Multiplication with a zero matrix.
-    constexpr Matrix3 zero(0.0, 0.0, 0.0,
-                           0.0, 0.0, 0.0,
-                           0.0, 0.0, 0.0);
-    constexpr Vector3 v3(1.0, 2.0, 3.0);
-    constexpr Vector3 result3 = zero * v3;
-    static_assert(nearly_equal(result3.x, 0.0), "Zero matrix multiplication failed for x component");
-    static_assert(nearly_equal(result3.y, 0.0), "Zero matrix multiplication failed for y component");
-    static_assert(nearly_equal(result3.z, 0.0), "Zero matrix multiplication failed for z component");
-
-    {
-        Matrix3 m(2.0, 0.0, 0.0,
-                  0.0, 3.0, 0.0,
-                  0.0, 0.0, 4.0);
-        Vector3 v(1.0, 1.0, 1.0);
-        Vector3 r = m * v; // expected (2, 3, 4)
-        assert(nearly_equal(r.x, 2.0));
-        assert(nearly_equal(r.y, 3.0));
-        assert(nearly_equal(r.z, 4.0));
-    }
+    static_assert((id * v2) == v2);
 }
 
-void test_angle_floating_point_limits()
+// =============================================================================
+// Matrix4
+// =============================================================================
+
+TEST_CASE("Matrix4: construction and identity")
 {
-    using namespace linalg3d;
+    constexpr Matrix4 m;
+    static_assert(m.m[0][0] == 0.0 && m.m[3][3] == 0.0);
 
-    Angle<AngleType::RADIANS> smallRad(std::numeric_limits<double>::min());
-    Angle<AngleType::RADIANS> largeRad(std::numeric_limits<double>::max());
-
-    assert(!is_nan(largeRad.to_degrees().value()) && "Max double conversion returned NaN");
-    assert(!is_inf(largeRad.to_degrees().value()) && "Max double conversion returned Inf");
-
-    Angle<AngleType::DEGREES> smallDeg(std::numeric_limits<double>::min());
-    Angle<AngleType::DEGREES> largeDeg(std::numeric_limits<double>::max());
-
-    assert(!is_nan(largeDeg.to_radians().value()) && "Max double conversion returned NaN");
-    assert(!is_inf(largeDeg.to_radians().value()) && "Max double conversion returned Inf");
+    constexpr auto id = Matrix4::identity();
+    static_assert(id.m[0][0] == 1.0 && id.m[1][1] == 1.0 && id.m[2][2] == 1.0 && id.m[3][3] == 1.0);
+    static_assert(id.m[0][1] == 0.0 && id.m[3][0] == 0.0);
 }
 
-constexpr void test_vector3_normalization_safety()
+TEST_CASE("Matrix4: determinant")
 {
-    using namespace linalg3d;
+    static_assert(Matrix4::identity().determinant() == 1.0);
 
-    constexpr Vector3 zeroVec(0.0, 0.0, 0.0);
-    constexpr Vector3 normed = zeroVec.normalized();
-
-    static_assert(normed == zeroVec, "Zero vector should remain zero after normalization");
-
-    constexpr Vector3 smallVec(1e-200, 1e-200, 1e-200);
-    constexpr Vector3 normedSmall = smallVec.normalized();
-
-    static_assert(!is_nan(normedSmall.x) && !is_nan(normedSmall.y) && !is_nan(normedSmall.z),
-                  "Normalization of small vector produced NaN values");
+    constexpr Matrix4 m(
+        2.0, 0.0, 0.0, 0.0,
+        0.0, 3.0, 0.0, 0.0,
+        0.0, 0.0, 4.0, 0.0,
+        0.0, 0.0, 0.0, 5.0);
+    static_assert(m.determinant() == 120.0);
 }
 
-constexpr void test_quaternion_rotation_invariants()
+TEST_CASE("Matrix4: transpose")
 {
-    using namespace linalg3d;
-
-    constexpr Quaternion q(0.70710678, 0.70710678, 0.0, 0.0); // 90-degree rotation around X-axis
-    constexpr Vector3 v(0.0, 1.0, 0.0);
-    constexpr Vector3 rotated = q * v;
-
-    constexpr double origNorm = v.norm();
-    constexpr double newNorm = rotated.norm();
-
-    static_assert(nearly_equal(origNorm, newNorm), "Quaternion rotation should preserve vector norm");
-
-    // Ensure rotated vector is where we expect it to be
-    static_assert(nearly_equal(rotated.y, 0.0), "Rotation moved Y component incorrectly");
-    static_assert(nearly_equal(rotated.z, 1.0), "Rotation failed to place vector on Z axis");
+    constexpr Matrix4 m(
+        1.0, 2.0, 3.0, 4.0,
+        5.0, 6.0, 7.0, 8.0,
+        9.0, 10.0, 11.0, 12.0,
+        13.0, 14.0, 15.0, 16.0);
+    constexpr auto t = m.transpose();
+    static_assert(t.m[0][1] == 5.0 && t.m[1][0] == 2.0);
+    static_assert(t.m[3][0] == 4.0 && t.m[0][3] == 13.0);
 }
 
-constexpr void test_matrix3x3_determinant()
+TEST_CASE("Matrix4: inverse")
 {
-    using namespace linalg3d;
+    constexpr auto id_inv = Matrix4::identity().inverse();
+    static_assert(id_inv.has_value());
+    static_assert(id_inv.value() == Matrix4::identity());
 
-    constexpr Matrix3 singularMatrix(1.0, 2.0, 3.0,
-                                     2.0, 4.0, 6.0,
-                                     3.0, 6.0, 9.0); // Rows are linearly dependent
-    constexpr Matrix3 identityMatrix(1.0, 0.0, 0.0,
-                                     0.0, 1.0, 0.0,
-                                     0.0, 0.0, 1.0);
-
-    static_assert(singularMatrix.determinant() == 0.0, "Singular matrix should have determinant 0");
-    static_assert(identityMatrix.determinant() == 1.0, "Identity matrix determinant should be 1");
-
-    // Attempt inversion (should fail gracefully)
-    constexpr Matrix3 inverseSingular = singularMatrix.inverse();
-    constexpr Matrix3 inverseIdentity = identityMatrix.inverse();
-
-    static_assert(inverseSingular == Matrix3{}, "Inverse of singular matrix should be zero matrix");
-    static_assert(inverseIdentity == identityMatrix, "Inverse of identity should be identity");
+    // Singular matrix
+    constexpr Matrix4 singular(
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0);
+    static_assert(!singular.inverse().has_value());
 }
 
-constexpr void test_matrix_inversion_correctness()
+TEST_CASE("Matrix4: inverse correctness")
 {
-    using namespace linalg3d;
+    constexpr Matrix4 m(
+        2.0, 0.0, 0.0, 1.0,
+        0.0, 3.0, 0.0, 0.0,
+        0.0, 0.0, 4.0, 0.0,
+        1.0, 0.0, 0.0, 2.0);
+    constexpr auto inv = m.inverse();
+    static_assert(inv.has_value());
 
-    constexpr Matrix3 m(2.0, -1.0, 0.0,
-                        -1.0, 2.0, -1.0,
-                        0.0, -1.0, 2.0);
-
-    constexpr Matrix3 inv = m.inverse();
-    constexpr Matrix3 result = m * inv;
-
-    constexpr Matrix3 identity(1.0, 0.0, 0.0,
-                               0.0, 1.0, 0.0,
-                               0.0, 0.0, 1.0);
-
-    static_assert(nearly_equal(result.m[0][0], identity.m[0][0]), "Inverse test failed for [0][0]");
-    static_assert(nearly_equal(result.m[1][1], identity.m[1][1]), "Inverse test failed for [1][1]");
-    static_assert(nearly_equal(result.m[2][2], identity.m[2][2]), "Inverse test failed for [2][2]");
+    constexpr auto result = m * inv.value();
+    CHECK(nearly_equal(result.m[0][0], 1.0));
+    CHECK(nearly_equal(result.m[1][1], 1.0));
+    CHECK(nearly_equal(result.m[2][2], 1.0));
+    CHECK(nearly_equal(result.m[3][3], 1.0));
+    CHECK(nearly_equal(result.m[0][1], 0.0));
+    CHECK(nearly_equal(result.m[0][3], 0.0));
 }
 
-constexpr void test_quaternion_inverse()
+TEST_CASE("Matrix4: arithmetic")
 {
-    using namespace linalg3d;
+    constexpr auto id = Matrix4::identity();
+    static_assert((id + id) == (id * 2.0));
+    static_assert((id * id) == id);
+}
 
+TEST_CASE("Matrix4 * Vector4")
+{
+    constexpr auto id = Matrix4::identity();
+    constexpr Vector4 v(1.0, 2.0, 3.0, 4.0);
+    static_assert((id * v) == v);
+
+    constexpr Matrix4 scale(
+        2.0, 0.0, 0.0, 0.0,
+        0.0, 3.0, 0.0, 0.0,
+        0.0, 0.0, 4.0, 0.0,
+        0.0, 0.0, 0.0, 1.0);
+    static_assert((scale * v) == Vector4(2.0, 6.0, 12.0, 4.0));
+}
+
+TEST_CASE("Matrix4: compound assignment")
+{
+    Matrix4 m = Matrix4::identity();
+    m *= 5.0;
+    CHECK(m.m[0][0] == 5.0);
+    CHECK(m.m[1][1] == 5.0);
+    CHECK(m.m[0][1] == 0.0);
+}
+
+// =============================================================================
+// EulerAngles
+// =============================================================================
+
+TEST_CASE("EulerAngles: construction")
+{
+    constexpr EulerAngles<AngleType::RADIANS> e;
+    static_assert(e.pitch == 0.0 && e.yaw == 0.0 && e.roll == 0.0);
+
+    constexpr EulerAngles e2(1.0, 2.0, 3.0);
+    static_assert(e2.pitch == 1.0 && e2.yaw == 2.0 && e2.roll == 3.0);
+}
+
+// =============================================================================
+// Quaternion
+// =============================================================================
+
+TEST_CASE("Quaternion: default is identity")
+{
+    constexpr Quaternion q;
+    static_assert(q.w == 1.0 && q.x == 0.0 && q.y == 0.0 && q.z == 0.0);
+    static_assert(q == Quaternion::identity());
+}
+
+TEST_CASE("Quaternion: parameterized construction")
+{
     constexpr Quaternion q(1.0, 2.0, 3.0, 4.0);
-    constexpr Quaternion q_inv = q.inverse();
-    constexpr Quaternion identity = q * q_inv;
-
-    static_assert(nearly_equal(identity.w, 1.0), "Quaternion inverse test failed at w");
-    static_assert(nearly_equal(identity.x, 0.0), "Quaternion inverse test failed at x");
-    static_assert(nearly_equal(identity.y, 0.0), "Quaternion inverse test failed at y");
-    static_assert(nearly_equal(identity.z, 0.0), "Quaternion inverse test failed at z");
+    static_assert(q.w == 1.0 && q.x == 2.0 && q.y == 3.0 && q.z == 4.0);
 }
 
-constexpr void test_quaternion_dot_product()
+TEST_CASE("Quaternion: normalized")
 {
-    using namespace linalg3d;
+    constexpr Quaternion q(1.0, 2.0, 3.0, 4.0);
+    constexpr auto n = q.normalized();
+    constexpr double expected_norm = gcem::sqrt(1.0 + 4.0 + 9.0 + 16.0);
+    static_assert(n.w == 1.0 / expected_norm);
+    static_assert(n.x == 2.0 / expected_norm);
+}
 
+TEST_CASE("Quaternion: inverse")
+{
+    constexpr Quaternion q(1.0, 2.0, 3.0, 4.0);
+    constexpr auto inv = q.inverse();
+    constexpr double n_sq = 30.0;
+    static_assert(inv.w == 1.0 / n_sq);
+    static_assert(inv.x == -2.0 / n_sq);
+
+    constexpr auto product = q * inv;
+    static_assert(nearly_equal(product.w, 1.0));
+    static_assert(nearly_equal(product.x, 0.0));
+    static_assert(nearly_equal(product.y, 0.0));
+    static_assert(nearly_equal(product.z, 0.0));
+}
+
+TEST_CASE("Quaternion: dot product")
+{
     constexpr Quaternion q1(1.0, 2.0, 3.0, 4.0);
     constexpr Quaternion q2(5.0, 6.0, 7.0, 8.0);
-
-    constexpr double dot = q1.dot(q2);
-    constexpr double expected = 1.0 * 5.0 + 2.0 * 6.0 + 3.0 * 7.0 + 4.0 * 8.0;
-
-    static_assert(nearly_equal(dot, expected), "Quaternion dot product is incorrect");
+    static_assert(q1.dot(q2) == 70.0);
 }
 
-int main()
+TEST_CASE("Quaternion: multiplication")
 {
-    test_angle();
-    test_angle_edge_cases();
-    test_vector3();
-    test_vector3_operators();
-    test_vector3_compare_operators();
-    test_matrix3x3();
-    test_euler_angles();
-    test_quaternion();
-    test_matrix_vector_multiplication();
-    test_operations();
-    test_angle_floating_point_limits();
-    test_vector3_normalization_safety();
-    test_quaternion_rotation_invariants();
-    test_matrix3x3_determinant();
-    test_matrix_inversion_correctness();
-    test_quaternion_inverse();
-    test_quaternion_dot_product();
-    fmt::print("All tests passed!\n");
-    return 0;
+    constexpr Quaternion q1(1.0, 2.0, 3.0, 4.0);
+    constexpr Quaternion q2(5.0, 6.0, 7.0, 8.0);
+    constexpr auto result = q1 * q2;
+    static_assert(result.w == -60.0 && result.x == 12.0 && result.y == 30.0 && result.z == 24.0);
+}
+
+TEST_CASE("Quaternion: identity multiplication")
+{
+    constexpr Quaternion q(1.0, 2.0, 3.0, 4.0);
+    static_assert(q == q * Quaternion::identity());
+}
+
+TEST_CASE("Quaternion: associativity")
+{
+    constexpr Quaternion q1(1.0, 2.0, 3.0, 4.0);
+    constexpr Quaternion q2(5.0, 6.0, 7.0, 8.0);
+    constexpr Quaternion q3(9.0, 10.0, 11.0, 12.0);
+    static_assert((q1 * q2) * q3 == q1 * (q2 * q3));
+}
+
+TEST_CASE("Quaternion: distributivity")
+{
+    constexpr Quaternion q1(1.0, 2.0, 3.0, 4.0);
+    constexpr Quaternion q2(5.0, 6.0, 7.0, 8.0);
+    constexpr Quaternion q3(9.0, 10.0, 11.0, 12.0);
+    static_assert(q1 * (q2 + q3) == q1 * q2 + q1 * q3);
+}
+
+TEST_CASE("Quaternion: vector rotation")
+{
+    constexpr double angle = PI / 2.0;
+    constexpr Quaternion q(gcem::cos(angle / 2.0), 0.0, 0.0, gcem::sin(angle / 2.0));
+    constexpr Vector3 v(1.0, 0.0, 0.0);
+    constexpr auto rotated = q * v;
+
+    static_assert(rotated.x == 0.0);
+    static_assert(rotated.y == 1.0);
+    static_assert(rotated.z == 0.0);
+}
+
+TEST_CASE("Quaternion: rotation preserves norm")
+{
+    constexpr Quaternion q(0.70710678, 0.70710678, 0.0, 0.0);
+    constexpr Vector3 v(0.0, 1.0, 0.0);
+    constexpr auto rotated = q * v;
+    static_assert(nearly_equal(v.norm(), rotated.norm()));
+}
+
+TEST_CASE("Quaternion: compound assignment")
+{
+    Quaternion q(1.0, 0.0, 0.0, 0.0);
+    q *= 2.0;
+    CHECK(q == Quaternion(2.0, 0.0, 0.0, 0.0));
+
+    Quaternion q2(1.0, 0.0, 0.0, 0.0);
+    q2 += Quaternion(0.0, 1.0, 0.0, 0.0);
+    CHECK(q2 == Quaternion(1.0, 1.0, 0.0, 0.0));
+}
+
+// =============================================================================
+// SLERP
+// =============================================================================
+
+TEST_CASE("SLERP: endpoints")
+{
+    constexpr Quaternion a(1.0, 0.0, 0.0, 0.0);
+    constexpr double half_angle = PI / 4.0;
+    constexpr Quaternion b(gcem::cos(half_angle), 0.0, 0.0, gcem::sin(half_angle));
+
+    constexpr auto at_0 = slerp(a, b, 0.0);
+    CHECK(nearly_equal(at_0.w, a.w));
+    CHECK(nearly_equal(at_0.x, a.x));
+    CHECK(nearly_equal(at_0.y, a.y));
+    CHECK(nearly_equal(at_0.z, a.z));
+
+    constexpr auto at_1 = slerp(a, b, 1.0);
+    CHECK(nearly_equal(at_1.w, b.w));
+    CHECK(nearly_equal(at_1.z, b.z));
+}
+
+TEST_CASE("SLERP: midpoint preserves unit norm")
+{
+    constexpr Quaternion a(1.0, 0.0, 0.0, 0.0);
+    constexpr double half_angle = PI / 4.0;
+    constexpr Quaternion b(gcem::cos(half_angle), 0.0, 0.0, gcem::sin(half_angle));
+
+    constexpr auto mid = slerp(a, b, 0.5);
+    CHECK(nearly_equal(mid.norm(), 1.0));
+}
+
+TEST_CASE("SLERP: nearly identical quaternions (linear fallback)")
+{
+    constexpr Quaternion a(1.0, 0.0, 0.0, 0.0);
+    constexpr Quaternion b(0.99999, 0.00001, 0.0, 0.0);
+    constexpr auto mid = slerp(a, b, 0.5);
+    CHECK(nearly_equal(mid.norm(), 1.0));
+}
+
+TEST_CASE("SLERP: opposite quaternions take shorter path")
+{
+    constexpr Quaternion a(1.0, 0.0, 0.0, 0.0);
+    constexpr Quaternion b(-1.0, 0.0, 0.0, 0.0);
+    constexpr auto mid = slerp(a, b, 0.5);
+    CHECK(nearly_equal(mid.norm(), 1.0));
+}
+
+// =============================================================================
+// Cross-type operations (linalg.hpp)
+// =============================================================================
+
+TEST_CASE("quaternion_to_matrix")
+{
+    constexpr auto m = quaternion_to_matrix(Quaternion::identity());
+    static_assert(m == Matrix3::identity());
+}
+
+TEST_CASE("quaternion_to_euler_angles roundtrip")
+{
+    constexpr EulerAngles e(0.1, 0.2, 0.3);
+    constexpr auto q = euler_angles_to_quaternion(e);
+    constexpr auto e2 = quaternion_to_euler_angles(q);
+
+    CHECK(nearly_equal(e.pitch.value(), e2.pitch.value()));
+    CHECK(nearly_equal(e.yaw.value(), e2.yaw.value()));
+    CHECK(nearly_equal(e.roll.value(), e2.roll.value()));
+}
+
+TEST_CASE("euler_angles_to_vector3 and back")
+{
+    constexpr EulerAngles<AngleType::RADIANS> e(0.1, 0.2, 0.3);
+    constexpr auto v = euler_angles_to_vector3(e);
+    static_assert(v.x == 0.1);
+    static_assert(v.z == 0.2);
+    static_assert(v.y == 0.3);
+}
+
+TEST_CASE("quaternion_to_vector3")
+{
+    constexpr Quaternion q(0.5, 1.0, 2.0, 3.0);
+    constexpr auto v = quaternion_to_vector3(q);
+    static_assert(v.x == 1.0 && v.y == 2.0 && v.z == 3.0);
+}
+
+TEST_CASE("Vector3 * Quaternion rotation")
+{
+    constexpr Quaternion q(1.0, 0.0, 0.0, 0.0);
+    constexpr Vector3 v(1.0, 2.0, 3.0);
+    constexpr auto result = v * q;
+    static_assert(nearly_equal(result.x, v.x));
+    static_assert(nearly_equal(result.y, v.y));
+    static_assert(nearly_equal(result.z, v.z));
+}
+
+// =============================================================================
+// fmt formatters
+// =============================================================================
+
+TEST_CASE("fmt: Vector2")
+{
+    CHECK(fmt::format("{}", Vector2(1.0, 2.0)) == "(1, 2)");
+}
+
+TEST_CASE("fmt: Vector3")
+{
+    CHECK(fmt::format("{}", Vector3(1.0, 2.0, 3.0)) == "(1, 2, 3)");
+}
+
+TEST_CASE("fmt: Vector4")
+{
+    CHECK(fmt::format("{}", Vector4(1.0, 2.0, 3.0, 4.0)) == "(1, 2, 3, 4)");
+}
+
+TEST_CASE("fmt: Quaternion")
+{
+    auto s = fmt::format("{}", Quaternion::identity());
+    CHECK(s == "Quaternion(w=1, x=0, y=0, z=0)");
+}
+
+TEST_CASE("fmt: Angle")
+{
+    CHECK(fmt::format("{}", Angle<AngleType::RADIANS>(1.0)).find("rad") != std::string::npos);
+    CHECK(fmt::format("{}", Angle<AngleType::DEGREES>(90.0)).find("deg") != std::string::npos);
+}
+
+TEST_CASE("fmt: Matrix2")
+{
+    auto s = fmt::format("{}", Matrix2::identity());
+    CHECK(s == "[[1, 0], [0, 1]]");
+}
+
+TEST_CASE("fmt: Matrix3")
+{
+    auto s = fmt::format("{}", Matrix3::identity());
+    CHECK(s == "[[1, 0, 0], [0, 1, 0], [0, 0, 1]]");
+}
+
+// =============================================================================
+// Strong type interop
+// =============================================================================
+
+TEST_CASE("Angle: get() returns native value")
+{
+    constexpr Angle<AngleType::RADIANS> rad(PI);
+    static_assert(rad.get() == PI);
+
+    constexpr Angle<AngleType::DEGREES> deg(180.0);
+    static_assert(deg.get() == 180.0);
+}
+
+TEST_CASE("Angle: from_strong (radians)")
+{
+    constexpr MockRadian r{PI};
+    constexpr auto a = Angle<AngleType::RADIANS>::from_strong(r);
+    static_assert(linalg3d::fabs(a.value() - PI) < EPSILON);
+}
+
+TEST_CASE("Angle: from_strong (degrees)")
+{
+    constexpr MockRadian r{PI};
+    constexpr auto a = Angle<AngleType::DEGREES>::from_strong(r);
+    static_assert(linalg3d::fabs(a.value() - 180.0) < EPSILON);
+}
+
+TEST_CASE("Angle: to_strong roundtrip")
+{
+    constexpr Angle<AngleType::RADIANS> a(PI / 4.0);
+    constexpr auto s = a.to_strong<MockRadian>();
+    static_assert(linalg3d::fabs(s.get() - PI / 4.0) < EPSILON);
+
+    constexpr Angle<AngleType::DEGREES> deg(90.0);
+    constexpr auto s2 = deg.to_strong<MockRadian>();
+    static_assert(linalg3d::fabs(s2.get() - PI / 2.0) < EPSILON);
+}
+
+TEST_CASE("EulerAngles: from strong types")
+{
+    constexpr MockRadian p{0.1};
+    constexpr MockRadian y{0.2};
+    constexpr MockRadian r{0.3};
+    constexpr EulerAngles<AngleType::RADIANS> e(p, y, r);
+    static_assert(linalg3d::fabs(e.pitch.value() - 0.1) < EPSILON);
+    static_assert(linalg3d::fabs(e.yaw.value() - 0.2) < EPSILON);
+    static_assert(linalg3d::fabs(e.roll.value() - 0.3) < EPSILON);
+}
+
+TEST_CASE("EulerAngles: from strong types to degrees")
+{
+    constexpr MockRadian p{PI / 2.0};
+    constexpr EulerAngles<AngleType::DEGREES> e(p, p, p);
+    CHECK(nearly_equal(e.pitch.value(), 90.0));
+    CHECK(nearly_equal(e.yaw.value(), 90.0));
+    CHECK(nearly_equal(e.roll.value(), 90.0));
 }
