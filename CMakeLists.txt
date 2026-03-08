@@ -1,17 +1,57 @@
-cmake_minimum_required(VERSION 3.22)
-project(linalg3d VERSION 0.1.0 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.25)
+project(linalg3d VERSION 0.2.0 LANGUAGES CXX)
 
 # Require C++23
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Find dependencies
-find_package(cmake-library REQUIRED)
-find_package(fmt REQUIRED)
-find_package(gcem REQUIRED)
+# Compiler warnings (inlined from cmake-library)
+function(linalg3d_set_warnings target)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(${target} PRIVATE
+            -Wall -Wextra -Wpedantic -Werror
+            -Wconversion -Wsign-conversion -Wnull-dereference
+            -Wdouble-promotion -Wformat=2 -Wshadow
+            -Wuninitialized -Wunreachable-code -Wunused
+        )
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            target_compile_options(${target} PRIVATE
+                -Wduplicated-cond -Wduplicated-branches
+                -Wlogical-op -Wuseless-cast
+            )
+        endif()
+    elseif(MSVC)
+        target_compile_options(${target} PRIVATE /W4 /WX)
+    endif()
+endfunction()
 
-# Runner library
+# Dependencies: use system packages if available, otherwise fetch from source
+include(FetchContent)
+if(POLICY CMP0077)
+    cmake_policy(SET CMP0077 NEW)
+endif()
+set(FETCHCONTENT_QUIET ON)
+
+find_package(gcem QUIET)
+if(NOT gcem_FOUND)
+    FetchContent_Declare(gcem GIT_REPOSITORY https://github.com/kthohr/gcem.git GIT_TAG master
+                         SYSTEM EXCLUDE_FROM_ALL)
+    FetchContent_MakeAvailable(gcem)
+endif()
+
+find_package(fmt QUIET)
+if(NOT fmt_FOUND)
+    FetchContent_Declare(fmt GIT_REPOSITORY https://github.com/fmtlib/fmt.git GIT_TAG 11.1.4
+                         SYSTEM EXCLUDE_FROM_ALL)
+    FetchContent_MakeAvailable(fmt)
+endif()
+
+FetchContent_Declare(doctest GIT_REPOSITORY https://github.com/doctest/doctest.git GIT_TAG v2.4.11
+                     SYSTEM EXCLUDE_FROM_ALL)
+FetchContent_MakeAvailable(doctest)
+
+# Header-only library
 add_library(${PROJECT_NAME} INTERFACE)
 
 target_include_directories(${PROJECT_NAME}
@@ -58,19 +98,13 @@ install(
   DESTINATION lib/cmake/${PROJECT_NAME}
 )
 
-# Test executable
+# Tests
+enable_testing()
+
 add_executable(${PROJECT_NAME}_test test/${PROJECT_NAME}_test.cpp)
-target_link_libraries(${PROJECT_NAME}_test PRIVATE ${PROJECT_NAME} fmt gcem)
-
-# Ensure asserts stay enabled in tests, even in Release mode
-set_warnings_and_errors(${PROJECT_NAME}_test)
-
-# Export the target
-install(
-    TARGETS ${PROJECT_NAME}_test
-    EXPORT ${PROJECT_NAME}Targets
-    DESTINATION bin
-)
+target_link_libraries(${PROJECT_NAME}_test PRIVATE ${PROJECT_NAME} fmt gcem doctest::doctest)
+linalg3d_set_warnings(${PROJECT_NAME}_test)
+add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
 
 # Handle "Manually-specified variables were not used by the project" warning.
 unset(CATKIN_INSTALL_INTO_PREFIX_ROOT)
