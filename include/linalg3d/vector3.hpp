@@ -1,28 +1,10 @@
 #pragma once
-#include "gcem.hpp" // for gcem::sqrt constexpr function
-#include <compare> // for std::partial_ordering
-#include "constexpr_math.hpp" //
+#include "constexpr_math.hpp"
+#include "gcem.hpp"
+#include <compare>
 
 namespace linalg3d
 {
-
-    constexpr std::weak_ordering compareDouble(double a, double b)
-    {
-        // Example: interpret NaNs as “always greater,” or whichever logic you prefer.
-        // This is a simplistic approach; real robust code might do bit tricks for total ordering.
-        if (is_nan(a) && is_nan(b))
-            return std::weak_ordering::equivalent;
-        if (is_nan(a))
-            return std::weak_ordering::greater;
-        if (is_nan(b))
-            return std::weak_ordering::less;
-        // Fallback to normal comparison
-        if (a < b)
-            return std::weak_ordering::less;
-        if (a > b)
-            return std::weak_ordering::greater;
-        return std::weak_ordering::equivalent;
-    }
 
     struct Vector3
     {
@@ -40,15 +22,18 @@ namespace linalg3d
         {
             return x * x + y * y + z * z;
         }
+
         [[nodiscard]] constexpr Vector3 normalized() const noexcept
         {
             double n = norm();
             return (n > 0.0) ? Vector3{x / n, y / n, z / n} : Vector3{};
         }
+
         [[nodiscard]] constexpr double dot(const Vector3 &other) const noexcept
         {
             return x * other.x + y * other.y + z * other.z;
         }
+
         [[nodiscard]] constexpr Vector3 cross(const Vector3 &other) const noexcept
         {
             return Vector3{
@@ -82,13 +67,45 @@ namespace linalg3d
             return Vector3{x / scalar, y / scalar, z / scalar};
         }
 
+        constexpr Vector3 &operator+=(const Vector3 &other) noexcept
+        {
+            x += other.x;
+            y += other.y;
+            z += other.z;
+            return *this;
+        }
+
+        constexpr Vector3 &operator-=(const Vector3 &other) noexcept
+        {
+            x -= other.x;
+            y -= other.y;
+            z -= other.z;
+            return *this;
+        }
+
+        constexpr Vector3 &operator*=(double scalar) noexcept
+        {
+            x *= scalar;
+            y *= scalar;
+            z *= scalar;
+            return *this;
+        }
+
+        constexpr Vector3 &operator/=(double scalar) noexcept
+        {
+            x /= scalar;
+            y /= scalar;
+            z /= scalar;
+            return *this;
+        }
+
         [[nodiscard]] constexpr auto operator<=>(const Vector3 &other) const noexcept
         {
-            if (auto cmp = compareDouble(x, other.x); cmp != 0)
+            if (auto cmp = compare_double(x, other.x); cmp != 0)
                 return cmp;
-            if (auto cmp = compareDouble(y, other.y); cmp != 0)
+            if (auto cmp = compare_double(y, other.y); cmp != 0)
                 return cmp;
-            return compareDouble(z, other.z);
+            return compare_double(z, other.z);
         }
 
         [[nodiscard]] constexpr bool operator==(const Vector3 &other) const noexcept
@@ -121,7 +138,7 @@ namespace linalg3d
             return (*this <=> other) != std::weak_ordering::less;
         }
 
-        [[nodiscard]] constexpr Vector3 abs () const noexcept
+        [[nodiscard]] constexpr Vector3 abs() const noexcept
         {
             return Vector3{std::abs(x), std::abs(y), std::abs(z)};
         }
