@@ -13,7 +13,7 @@ jobs:
   quality:
     uses: PavelGuzenfeld/standard/.github/workflows/cpp-quality.yml@main
     with:
-      docker_image: ghcr.io/pavelguzenfeld/linalg3d:latest
+      docker_image: ghcr.io/pavelguzenfeld/strong-types:latest
       pre_analysis_script: .github/scripts/pre-analysis.sh
       compile_commands_path: build
       source_mount: /workspace/src

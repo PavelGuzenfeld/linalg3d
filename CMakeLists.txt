@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.25)
 project(linalg3d VERSION 0.2.0 LANGUAGES CXX)
 
 # Require C++23
@@ -26,16 +26,29 @@ function(linalg3d_set_warnings target)
     endif()
 endfunction()
 
-# Find dependencies
-find_package(fmt REQUIRED)
-find_package(gcem REQUIRED)
-
+# Dependencies: use system packages if available, otherwise fetch from source
 include(FetchContent)
-FetchContent_Declare(
-    doctest
-    GIT_REPOSITORY https://github.com/doctest/doctest.git
-    GIT_TAG v2.4.11
-)
+if(POLICY CMP0077)
+    cmake_policy(SET CMP0077 NEW)
+endif()
+set(FETCHCONTENT_QUIET ON)
+
+find_package(gcem QUIET)
+if(NOT gcem_FOUND)
+    FetchContent_Declare(gcem GIT_REPOSITORY https://github.com/kthohr/gcem.git GIT_TAG master
+                         SYSTEM EXCLUDE_FROM_ALL)
+    FetchContent_MakeAvailable(gcem)
+endif()
+
+find_package(fmt QUIET)
+if(NOT fmt_FOUND)
+    FetchContent_Declare(fmt GIT_REPOSITORY https://github.com/fmtlib/fmt.git GIT_TAG 11.1.4
+                         SYSTEM EXCLUDE_FROM_ALL)
+    FetchContent_MakeAvailable(fmt)
+endif()
+
+FetchContent_Declare(doctest GIT_REPOSITORY https://github.com/doctest/doctest.git GIT_TAG v2.4.11
+                     SYSTEM EXCLUDE_FROM_ALL)
 FetchContent_MakeAvailable(doctest)
 
 # Header-only library
