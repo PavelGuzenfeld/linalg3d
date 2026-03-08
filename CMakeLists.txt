@@ -47,20 +47,6 @@ if(NOT fmt_FOUND)
     FetchContent_MakeAvailable(fmt)
 endif()
 
-FetchContent_Declare(doctest GIT_REPOSITORY https://github.com/doctest/doctest.git GIT_TAG v2.4.11
-                     SYSTEM EXCLUDE_FROM_ALL)
-FetchContent_MakeAvailable(doctest)
-
-FetchContent_Declare(nanobench GIT_REPOSITORY https://github.com/martinus/nanobench.git GIT_TAG v4.3.11
-                     SYSTEM EXCLUDE_FROM_ALL)
-FetchContent_MakeAvailable(nanobench)
-
-FetchContent_Declare(eigen GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git GIT_TAG 3.4.0
-                     SYSTEM EXCLUDE_FROM_ALL)
-FetchContent_Populate(eigen)
-add_library(Eigen3::Eigen INTERFACE IMPORTED)
-target_include_directories(Eigen3::Eigen SYSTEM INTERFACE "${eigen_SOURCE_DIR}")
-
 # Header-only library
 add_library(${PROJECT_NAME} INTERFACE)
 
@@ -108,18 +94,34 @@ install(
   DESTINATION lib/cmake/${PROJECT_NAME}
 )
 
-# Tests
-enable_testing()
+# Tests and benchmarks (only when built standalone)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    FetchContent_Declare(doctest GIT_REPOSITORY https://github.com/doctest/doctest.git GIT_TAG v2.4.11
+                         SYSTEM EXCLUDE_FROM_ALL)
+    FetchContent_MakeAvailable(doctest)
 
-add_executable(${PROJECT_NAME}_test test/${PROJECT_NAME}_test.cpp)
-target_link_libraries(${PROJECT_NAME}_test PRIVATE ${PROJECT_NAME} fmt gcem doctest::doctest)
-linalg3d_set_warnings(${PROJECT_NAME}_test)
-add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
+    FetchContent_Declare(nanobench GIT_REPOSITORY https://github.com/martinus/nanobench.git GIT_TAG v4.3.11
+                         SYSTEM EXCLUDE_FROM_ALL)
+    FetchContent_MakeAvailable(nanobench)
 
-# Benchmarks
-add_executable(${PROJECT_NAME}_bench bench/${PROJECT_NAME}_bench.cpp)
-target_link_libraries(${PROJECT_NAME}_bench PRIVATE ${PROJECT_NAME} gcem nanobench::nanobench Eigen3::Eigen)
-linalg3d_set_warnings(${PROJECT_NAME}_bench)
+    FetchContent_Declare(eigen GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git GIT_TAG 3.4.0
+                         SYSTEM EXCLUDE_FROM_ALL)
+    FetchContent_Populate(eigen)
+    add_library(Eigen3::Eigen INTERFACE IMPORTED)
+    target_include_directories(Eigen3::Eigen SYSTEM INTERFACE "${eigen_SOURCE_DIR}")
+
+    enable_testing()
+
+    add_executable(${PROJECT_NAME}_test test/${PROJECT_NAME}_test.cpp)
+    target_link_libraries(${PROJECT_NAME}_test PRIVATE ${PROJECT_NAME} fmt gcem doctest::doctest)
+    linalg3d_set_warnings(${PROJECT_NAME}_test)
+    add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
+
+    # Benchmarks
+    add_executable(${PROJECT_NAME}_bench bench/${PROJECT_NAME}_bench.cpp)
+    target_link_libraries(${PROJECT_NAME}_bench PRIVATE ${PROJECT_NAME} gcem nanobench::nanobench Eigen3::Eigen)
+    linalg3d_set_warnings(${PROJECT_NAME}_bench)
+endif()
 
 # Handle "Manually-specified variables were not used by the project" warning.
 unset(CATKIN_INSTALL_INTO_PREFIX_ROOT)
