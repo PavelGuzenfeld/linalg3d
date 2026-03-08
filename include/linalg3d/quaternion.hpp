@@ -133,7 +133,7 @@ public:
 
     [[nodiscard]] constexpr double norm() const noexcept
     {
-        return gcem::sqrt(norm_sq());
+        return ce_sqrt(norm_sq());
     }
 };
 
@@ -153,10 +153,10 @@ public:
         return result.normalized();
     }
 
-    double theta = gcem::acos(cos_theta);
-    double sin_theta = gcem::sin(theta);
-    double wa = gcem::sin((1.0 - t) * theta) / sin_theta;
-    double wb = gcem::sin(t * theta) / sin_theta;
+    const double theta = ce_acos(cos_theta);
+    const double sin_theta = ce_sin(theta);
+    const double wa = ce_sin((1.0 - t) * theta) / sin_theta;
+    const double wb = ce_sin(t * theta) / sin_theta;
 
     return Quaternion{wa * a.w + wb * b_adj.w,
                       wa * a.x + wb * b_adj.x,

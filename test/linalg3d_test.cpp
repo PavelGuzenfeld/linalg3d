@@ -576,7 +576,7 @@ TEST_CASE("Quaternion: normalized")
 {
     constexpr Quaternion q(1.0, 2.0, 3.0, 4.0);
     constexpr auto n = q.normalized();
-    constexpr double expected_norm = gcem::sqrt(1.0 + 4.0 + 9.0 + 16.0);
+    constexpr double expected_norm = ce_sqrt(1.0 + 4.0 + 9.0 + 16.0);
     static_assert(n.w == 1.0 / expected_norm);
     static_assert(n.x == 2.0 / expected_norm);
 }
@@ -636,7 +636,7 @@ TEST_CASE("Quaternion: distributivity")
 TEST_CASE("Quaternion: vector rotation")
 {
     constexpr double angle = PI / 2.0;
-    constexpr Quaternion q(gcem::cos(angle / 2.0), 0.0, 0.0, gcem::sin(angle / 2.0));
+    constexpr Quaternion q(ce_cos(angle / 2.0), 0.0, 0.0, ce_sin(angle / 2.0));
     constexpr Vector3 v(1.0, 0.0, 0.0);
     constexpr auto rotated = q * v;
 
@@ -672,7 +672,7 @@ TEST_CASE("SLERP: endpoints")
 {
     constexpr Quaternion a(1.0, 0.0, 0.0, 0.0);
     constexpr double half_angle = PI / 4.0;
-    constexpr Quaternion b(gcem::cos(half_angle), 0.0, 0.0, gcem::sin(half_angle));
+    constexpr Quaternion b(ce_cos(half_angle), 0.0, 0.0, ce_sin(half_angle));
 
     constexpr auto at_0 = slerp(a, b, 0.0);
     CHECK(nearly_equal(at_0.w, a.w));
@@ -689,7 +689,7 @@ TEST_CASE("SLERP: midpoint preserves unit norm")
 {
     constexpr Quaternion a(1.0, 0.0, 0.0, 0.0);
     constexpr double half_angle = PI / 4.0;
-    constexpr Quaternion b(gcem::cos(half_angle), 0.0, 0.0, gcem::sin(half_angle));
+    constexpr Quaternion b(ce_cos(half_angle), 0.0, 0.0, ce_sin(half_angle));
 
     constexpr auto mid = slerp(a, b, 0.5);
     CHECK(nearly_equal(mid.norm(), 1.0));
