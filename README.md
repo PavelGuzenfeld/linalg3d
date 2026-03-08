@@ -91,25 +91,14 @@ Measured with [nanobench](https://github.com/martinus/nanobench) (GCC 14, `-O2`,
 | Angle::sin | 3.92 | — | — |
 | Angle::cos | 3.01 | — | — |
 
-Ratio = linalg3d / Eigen (lower is better for linalg3d; **bold** = linalg3d wins).
+Ratio = linalg3d / Eigen (lower is better for linalg3d; **bold** = linalg3d faster).
 
-### How does linalg3d compare to Eigen?
+### Performance summary vs Eigen
 
-**Where linalg3d wins:**
-- **Compile-time evaluation** — every operation is `constexpr`, enabling `static_assert` validation, compile-time lookup tables, and zero-cost initialization. Eigen has no constexpr support.
-- **Type safety** — `Angle<RADIANS>` vs `Angle<DEGREES>` prevents unit-mismatch bugs at the type level. `std::expected` for fallible operations instead of silent NaN/garbage.
-- **Euler/quaternion conversions** — 0.6x Eigen's time (16ns vs 26ns).
-- **SLERP** — 0.9x Eigen (19.5ns vs 21ns).
-- **Cross product** — 0.9x Eigen (0.89ns vs 0.95ns).
-- **Header-only, zero dependencies at runtime** — single `#include`, no linking, no configuration.
-
-**Where Eigen wins:**
-- **Matrix inverse** — 2.8-3.4x faster via SIMD-specialized fixed-size matrix decomposition.
-- **Quaternion*Vector3 rotation** — 2.2x faster, Eigen uses an optimized formula instead of the general q*v*q^-1 expansion.
-- **Dot product** — 1.4x faster with SIMD vectorization.
-- **Ecosystem** — sparse matrices, decompositions, solvers, geometry module.
-
-**Bottom line:** linalg3d is within 1-1.5x of Eigen for most operations, and uniquely offers compile-time evaluation + type safety. The gap only appears in matrix inverse (where Eigen's SIMD specializations dominate) and quaternion-vector rotation (where Eigen uses a more efficient algorithm). For robotics, game math, and embedded applications where correctness and compile-time guarantees matter more than peak matrix throughput, linalg3d is a strong choice.
+- **On par (0.9-1.1x):** vector norm, normalized, add, scalar multiply, matrix transpose, matrix3/4 multiply — 8 of 14 operations within 10% of Eigen
+- **linalg3d faster:** cross product (0.9x), slerp (0.9x), quaternion-to-euler (0.6x)
+- **Eigen faster:** matrix inverse (2.8-3.4x, SIMD-specialized), quaternion*vector (2.2x, optimized rotation formula), dot product (1.4x, SIMD)
+- **Unique to linalg3d:** all operations are `constexpr` (Eigen has none), type-safe angles, `std::expected` error handling
 
 ```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Release
