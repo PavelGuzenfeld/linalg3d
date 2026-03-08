@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include <compare>
 #include <gcem.hpp>
 #include <limits>
@@ -7,6 +8,91 @@ namespace linalg3d
 {
 constexpr double PI = static_cast<double>(GCEM_PI);
 constexpr double HALF_PI = static_cast<double>(GCEM_HALF_PI);
+
+// consteval-dispatch: gcem at compile time, std at runtime
+[[nodiscard]] constexpr double ce_sqrt(double x) noexcept
+{
+    if consteval
+    {
+        return gcem::sqrt(x);
+    }
+    else
+    {
+        return std::sqrt(x);
+    }
+}
+
+[[nodiscard]] constexpr double ce_sin(double x) noexcept
+{
+    if consteval
+    {
+        return gcem::sin(x);
+    }
+    else
+    {
+        return std::sin(x);
+    }
+}
+
+[[nodiscard]] constexpr double ce_cos(double x) noexcept
+{
+    if consteval
+    {
+        return gcem::cos(x);
+    }
+    else
+    {
+        return std::cos(x);
+    }
+}
+
+[[nodiscard]] constexpr double ce_tan(double x) noexcept
+{
+    if consteval
+    {
+        return gcem::tan(x);
+    }
+    else
+    {
+        return std::tan(x);
+    }
+}
+
+[[nodiscard]] constexpr double ce_asin(double x) noexcept
+{
+    if consteval
+    {
+        return gcem::asin(x);
+    }
+    else
+    {
+        return std::asin(x);
+    }
+}
+
+[[nodiscard]] constexpr double ce_acos(double x) noexcept
+{
+    if consteval
+    {
+        return gcem::acos(x);
+    }
+    else
+    {
+        return std::acos(x);
+    }
+}
+
+[[nodiscard]] constexpr double ce_atan2(double y, double x) noexcept
+{
+    if consteval
+    {
+        return gcem::atan2(y, x);
+    }
+    else
+    {
+        return std::atan2(y, x);
+    }
+}
 
 [[nodiscard]] constexpr double fabs(double x) noexcept
 {
