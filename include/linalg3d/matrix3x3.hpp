@@ -42,11 +42,11 @@ public:
 
     [[nodiscard]] constexpr std::expected<Matrix3, MatrixError> inverse() const noexcept
     {
-        double det = determinant();
+        const double det = determinant();
         if (det == 0.0)
             return std::unexpected{MatrixError::singular};
 
-        double inv_det = 1.0 / det;
+        const double inv_det = 1.0 / det;
         return Matrix3{(m[1][1] * m[2][2] - m[1][2] * m[2][1]) * inv_det,
                        (m[0][2] * m[2][1] - m[0][1] * m[2][2]) * inv_det,
                        (m[0][1] * m[1][2] - m[0][2] * m[1][1]) * inv_det,

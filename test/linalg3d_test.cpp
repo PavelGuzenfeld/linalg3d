@@ -95,19 +95,19 @@ TEST_CASE("Angle: negative conversion")
 
 TEST_CASE("Angle: large value storage")
 {
-    Angle<AngleType::DEGREES> absurd(1e308);
+    const Angle<AngleType::DEGREES> absurd(1e308);
     CHECK(absurd.value() == 1e308);
 
-    Angle<AngleType::RADIANS> absurd_rad(1e308);
+    const Angle<AngleType::RADIANS> absurd_rad(1e308);
     CHECK(absurd_rad.value() == 1e308);
 }
 
 TEST_CASE("Angle: NaN/Inf passthrough")
 {
-    Angle<AngleType::RADIANS> nan_angle(std::numeric_limits<double>::quiet_NaN());
+    const Angle<AngleType::RADIANS> nan_angle(std::numeric_limits<double>::quiet_NaN());
     CHECK(is_nan(nan_angle.value()));
 
-    Angle<AngleType::RADIANS> inf_angle(std::numeric_limits<double>::infinity());
+    const Angle<AngleType::RADIANS> inf_angle(std::numeric_limits<double>::infinity());
     CHECK(is_inf(inf_angle.value()));
 }
 

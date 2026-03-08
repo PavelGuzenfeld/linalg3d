@@ -14,8 +14,8 @@ namespace linalg3d
 
 [[nodiscard]] constexpr Vector3 operator*(const Vector3 &v, const Quaternion &q) noexcept
 {
-    Quaternion v_quat{0.0, v.x, v.y, v.z};
-    Quaternion result = q * v_quat * q.inverse();
+    const Quaternion v_quat{0.0, v.x, v.y, v.z};
+    const Quaternion result = q * v_quat * q.inverse();
     return Vector3{result.x, result.y, result.z};
 }
 
@@ -23,9 +23,9 @@ namespace linalg3d
 
 [[nodiscard]] constexpr Matrix3 quaternion_to_matrix(const Quaternion &q) noexcept
 {
-    double xx = q.x * q.x, yy = q.y * q.y, zz = q.z * q.z;
-    double wx = q.w * q.x, wy = q.w * q.y, wz = q.w * q.z;
-    double xy = q.x * q.y, xz = q.x * q.z, yz = q.y * q.z;
+    const double xx = q.x * q.x, yy = q.y * q.y, zz = q.z * q.z;
+    const double wx = q.w * q.x, wy = q.w * q.y, wz = q.w * q.z;
+    const double xy = q.x * q.y, xz = q.x * q.z, yz = q.y * q.z;
 
     return Matrix3{1.0 - 2.0 * (yy + zz),
                    2.0 * (xy - wz),
@@ -55,12 +55,12 @@ namespace linalg3d
 
 [[nodiscard]] constexpr Quaternion euler_angles_to_quaternion(EulerAngles<AngleType::RADIANS> const &angles) noexcept
 {
-    double cy = gcem::cos(angles.yaw * 0.5);
-    double sy = gcem::sin(angles.yaw * 0.5);
-    double cp = gcem::cos(angles.pitch * 0.5);
-    double sp = gcem::sin(angles.pitch * 0.5);
-    double cr = gcem::cos(angles.roll * 0.5);
-    double sr = gcem::sin(angles.roll * 0.5);
+    const double cy = gcem::cos(angles.yaw * 0.5);
+    const double sy = gcem::sin(angles.yaw * 0.5);
+    const double cp = gcem::cos(angles.pitch * 0.5);
+    const double sp = gcem::sin(angles.pitch * 0.5);
+    const double cr = gcem::cos(angles.roll * 0.5);
+    const double sr = gcem::sin(angles.roll * 0.5);
 
     return Quaternion{cr * cp * cy + sr * sp * sy,
                       sr * cp * cy - cr * sp * sy,
