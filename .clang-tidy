@@ -29,7 +29,9 @@ Checks: >-
   -readability-convert-member-functions-to-static,
   -readability-braces-around-statements,
   -readability-isolate-declaration,
-  -modernize-loop-convert
+  -readability-else-after-return,
+  -modernize-loop-convert,
+  -modernize-use-std-numbers
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 CheckOptions:

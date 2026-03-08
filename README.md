@@ -4,13 +4,13 @@ Header-only constexpr linear algebra library for C++23. Provides type-safe 2D, 3
 
 ## Features
 
-- **Fully constexpr** — all operations evaluate at compile time via [gcem](https://github.com/kthohr/gcem)
+- **Fully constexpr** — all operations evaluate at compile time via [gcem](https://github.com/kthohr/gcem), with `if consteval` dispatch to `std::` math at runtime for hardware-accelerated performance
 - **Type-safe angles** — `Angle<RADIANS>` vs `Angle<DEGREES>` prevents unit-mismatch bugs at the type level
 - **2D, 3D, 4D** — `Vector2`/`Matrix2`, `Vector3`/`Matrix3`, `Vector4`/`Matrix4`
 - **Quaternions** — multiplication, rotation, SLERP interpolation, Euler angle conversion
 - **`std::expected`** — matrix `inverse()` returns `std::expected<Matrix, MatrixError>` instead of silent failure
 - **fmt support** — optional `format.hpp` header with `fmt::formatter` specializations for all types
-- **Zero dependencies at runtime** — gcem is header-only, fmt is optional
+- **Zero dependencies at runtime** — gcem is header-only (compile-time only), fmt is optional
 
 ## Usage
 
@@ -72,22 +72,30 @@ fmt::print("{}\n", Quaternion::identity());   // Quaternion(w=1, x=0, y=0, z=0)
 
 ## Benchmarks
 
-Measured with [nanobench](https://github.com/martinus/nanobench) (GCC 14, Release, Ubuntu 24.04):
+Measured with [nanobench](https://github.com/martinus/nanobench) (GCC 14, `-O2`, Ubuntu 24.04). Compared against [Eigen 3.4](https://eigen.tuxfamily.org/) on equivalent operations:
 
-| Operation | ns/op | Throughput |
-|---|---|---|
-| Vector3 dot | 0.75 | 1.3 Gop/s |
-| Vector3 cross | 0.91 | 1.1 Gop/s |
-| Vector3 add | 0.51 | 1.9 Gop/s |
-| Matrix3 multiply | 4.17 | 240 Mop/s |
-| Matrix4 inverse | 41.75 | 24 Mop/s |
-| Quaternion multiply | 2.30 | 434 Mop/s |
-| Quaternion*Vector3 | 6.19 | 162 Mop/s |
-| slerp | 269 | 3.7 Mop/s |
+| Operation | linalg3d (ns) | Eigen (ns) | Notes |
+|---|---|---|---|
+| Vector3 dot | 0.70 | 0.51 | |
+| Vector3 cross | 0.89 | 0.95 | |
+| Vector3 norm | 1.39 | 1.38 | |
+| Vector3 normalized | 3.23 | 3.22 | |
+| Matrix3 multiply | 4.05 | 3.03 | |
+| Matrix3 inverse | 12.65 | 4.51 | Eigen uses SIMD specialization |
+| Matrix4 inverse | 37.92 | 11.03 | Eigen uses SIMD specialization |
+| Matrix4 multiply | 6.59 | 5.84 | |
+| Quaternion multiply | 2.37 | 1.88 | |
+| Quaternion*Vector3 | 6.01 | 2.68 | |
+| slerp | 19.54 | 20.96 | |
+| quaternion_to_euler | 16.11 | 25.88 | |
+| Angle::sin | 3.92 | — | hardware fsin via `if consteval` |
+| Angle::cos | 3.01 | — | hardware fcos via `if consteval` |
+
+linalg3d trades SIMD-optimized matrix operations for compile-time evaluation (`constexpr` everywhere) and type safety. Trig-heavy operations (slerp, euler conversion) use `if consteval` to dispatch to `std::` math at runtime, matching hardware performance.
 
 ```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build
+cmake --build build --target linalg3d_bench
 ./build/linalg3d_bench
 ```
 

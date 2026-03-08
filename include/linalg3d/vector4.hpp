@@ -17,7 +17,7 @@ struct Vector4
 
     [[nodiscard]] constexpr double norm() const noexcept
     {
-        return gcem::sqrt(norm_sq());
+        return ce_sqrt(norm_sq());
     }
 
     [[nodiscard]] constexpr double norm_sq() const noexcept

@@ -55,25 +55,25 @@ public:
     [[nodiscard]] constexpr double sin() const noexcept
     {
         if constexpr (T == AngleType::RADIANS)
-            return gcem::sin(value_);
+            return ce_sin(value_);
         else
-            return gcem::sin(value_ * PI / 180.0);
+            return ce_sin(value_ * PI / 180.0);
     }
 
     [[nodiscard]] constexpr double cos() const noexcept
     {
         if constexpr (T == AngleType::RADIANS)
-            return gcem::cos(value_);
+            return ce_cos(value_);
         else
-            return gcem::cos(value_ * PI / 180.0);
+            return ce_cos(value_ * PI / 180.0);
     }
 
     [[nodiscard]] constexpr double tan() const noexcept
     {
         if constexpr (T == AngleType::RADIANS)
-            return gcem::tan(value_);
+            return ce_tan(value_);
         else
-            return gcem::tan(value_ * PI / 180.0);
+            return ce_tan(value_ * PI / 180.0);
     }
 
     [[nodiscard]] constexpr Angle<AngleType::RADIANS> to_radians() const noexcept
