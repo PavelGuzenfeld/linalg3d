@@ -640,9 +640,9 @@ TEST_CASE("Quaternion: vector rotation")
     constexpr Vector3 v(1.0, 0.0, 0.0);
     constexpr auto rotated = q * v;
 
-    static_assert(rotated.x == 0.0);
-    static_assert(rotated.y == 1.0);
-    static_assert(rotated.z == 0.0);
+    static_assert(nearly_equal(rotated.x, 0.0));
+    static_assert(nearly_equal(rotated.y, 1.0));
+    static_assert(nearly_equal(rotated.z, 0.0));
 }
 
 TEST_CASE("Quaternion: rotation preserves norm")

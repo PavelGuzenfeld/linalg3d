@@ -64,9 +64,10 @@ public:
 
     [[nodiscard]] constexpr Vector3 operator*(const Vector3 &v) const noexcept
     {
-        const Quaternion v_quat{0.0, v.x, v.y, v.z};
-        const Quaternion result = *this * v_quat * inverse();
-        return Vector3{result.x, result.y, result.z};
+        // Optimized rotation: v' = v + 2w*(qv x v) + 2*(qv x (qv x v))
+        const Vector3 qv{x, y, z};
+        const Vector3 t = qv.cross(v) * 2.0;
+        return v + t * w + qv.cross(t);
     }
 
     [[nodiscard]] constexpr Quaternion operator/(double scalar) const noexcept

@@ -14,9 +14,7 @@ namespace linalg3d
 
 [[nodiscard]] constexpr Vector3 operator*(const Vector3 &v, const Quaternion &q) noexcept
 {
-    const Quaternion v_quat{0.0, v.x, v.y, v.z};
-    const Quaternion result = q * v_quat * q.inverse();
-    return Vector3{result.x, result.y, result.z};
+    return q * v;
 }
 
 // --- Quaternion <-> Matrix3 ---
