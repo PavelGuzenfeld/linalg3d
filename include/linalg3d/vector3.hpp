@@ -1,6 +1,6 @@
 #pragma once
 #include "constexpr_math.hpp"
-#include "gcem.hpp"
+#include <gcem.hpp>
 #include <compare>
 
 namespace linalg3d
