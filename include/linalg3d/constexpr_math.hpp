@@ -23,6 +23,11 @@ namespace linalg3d
                x == -std::numeric_limits<double>::infinity();
     }
 
+    [[nodiscard]] constexpr double clamp(double value, double lo, double hi) noexcept
+    {
+        return value < lo ? lo : (value > hi ? hi : value);
+    }
+
     [[nodiscard]] constexpr std::weak_ordering compare_double(double a, double b) noexcept
     {
         if (is_nan(a) && is_nan(b))

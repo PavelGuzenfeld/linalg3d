@@ -1,6 +1,5 @@
 #pragma once
 #include "constexpr_math.hpp"
-#include <algorithm> // for clamp
 #include <concepts>
 
 namespace linalg3d
@@ -128,9 +127,9 @@ namespace linalg3d
                 return 0.0;
 
             if constexpr (T == AngleType::RADIANS)
-                return std::clamp(value, -MAX_RADIANS, MAX_RADIANS);
+                return clamp(value, -MAX_RADIANS, MAX_RADIANS);
             else
-                return std::clamp(value, -MAX_DEGREES, MAX_DEGREES);
+                return clamp(value, -MAX_DEGREES, MAX_DEGREES);
         }
 
         double value_{};
