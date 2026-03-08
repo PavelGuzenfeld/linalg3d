@@ -51,6 +51,10 @@ FetchContent_Declare(doctest GIT_REPOSITORY https://github.com/doctest/doctest.g
                      SYSTEM EXCLUDE_FROM_ALL)
 FetchContent_MakeAvailable(doctest)
 
+FetchContent_Declare(nanobench GIT_REPOSITORY https://github.com/martinus/nanobench.git GIT_TAG v4.3.11
+                     SYSTEM EXCLUDE_FROM_ALL)
+FetchContent_MakeAvailable(nanobench)
+
 # Header-only library
 add_library(${PROJECT_NAME} INTERFACE)
 
@@ -105,6 +109,11 @@ add_executable(${PROJECT_NAME}_test test/${PROJECT_NAME}_test.cpp)
 target_link_libraries(${PROJECT_NAME}_test PRIVATE ${PROJECT_NAME} fmt gcem doctest::doctest)
 linalg3d_set_warnings(${PROJECT_NAME}_test)
 add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
+
+# Benchmarks
+add_executable(${PROJECT_NAME}_bench bench/${PROJECT_NAME}_bench.cpp)
+target_link_libraries(${PROJECT_NAME}_bench PRIVATE ${PROJECT_NAME} gcem nanobench::nanobench)
+linalg3d_set_warnings(${PROJECT_NAME}_bench)
 
 # Handle "Manually-specified variables were not used by the project" warning.
 unset(CATKIN_INSTALL_INTO_PREFIX_ROOT)

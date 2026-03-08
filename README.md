@@ -70,14 +70,35 @@ fmt::print("{}\n", Quaternion::identity());   // Quaternion(w=1, x=0, y=0, z=0)
 | `Angle<T>` | `angle.hpp` | Type-safe angle (radians/degrees) |
 | `EulerAngles<T>` | `euler_angles.hpp` | Pitch/yaw/roll triplet |
 
-## Build
+## Benchmarks
 
-Requires C++23, [gcem](https://github.com/kthohr/gcem), and [cmake-library](https://github.com/PavelGuzenfeld/cmake-library).
+Measured with [nanobench](https://github.com/martinus/nanobench) (GCC 14, Release, Ubuntu 24.04):
+
+| Operation | ns/op | Throughput |
+|---|---|---|
+| Vector3 dot | 0.75 | 1.3 Gop/s |
+| Vector3 cross | 0.91 | 1.1 Gop/s |
+| Vector3 add | 0.51 | 1.9 Gop/s |
+| Matrix3 multiply | 4.17 | 240 Mop/s |
+| Matrix4 inverse | 41.75 | 24 Mop/s |
+| Quaternion multiply | 2.30 | 434 Mop/s |
+| Quaternion*Vector3 | 6.19 | 162 Mop/s |
+| slerp | 269 | 3.7 Mop/s |
 
 ```bash
-mkdir build && cd build
-cmake .. && make
-ctest
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+./build/linalg3d_bench
+```
+
+## Build
+
+Requires CMake 3.25+ and a C++23 compiler. Dependencies (gcem, fmt, doctest, nanobench) are fetched automatically via FetchContent if not found on the system.
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+ctest --test-dir build
 ```
 
 ## License
