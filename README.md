@@ -74,24 +74,31 @@ fmt::print("{}\n", Quaternion::identity());   // Quaternion(w=1, x=0, y=0, z=0)
 
 Measured with [nanobench](https://github.com/martinus/nanobench) (GCC 14, `-O2`, Ubuntu 24.04). Compared against [Eigen 3.4](https://eigen.tuxfamily.org/) on equivalent operations:
 
-| Operation | linalg3d (ns) | Eigen (ns) | Notes |
+| Operation | linalg3d (ns) | Eigen (ns) | Ratio |
 |---|---|---|---|
-| Vector3 dot | 0.70 | 0.51 | |
-| Vector3 cross | 0.89 | 0.95 | |
-| Vector3 norm | 1.39 | 1.38 | |
-| Vector3 normalized | 3.23 | 3.22 | |
-| Matrix3 multiply | 4.05 | 3.03 | |
-| Matrix3 inverse | 12.65 | 4.51 | Eigen uses SIMD specialization |
-| Matrix4 inverse | 37.92 | 11.03 | Eigen uses SIMD specialization |
-| Matrix4 multiply | 6.59 | 5.84 | |
-| Quaternion multiply | 2.37 | 1.88 | |
-| Quaternion*Vector3 | 6.01 | 2.68 | |
-| slerp | 19.54 | 20.96 | |
-| quaternion_to_euler | 16.11 | 25.88 | |
-| Angle::sin | 3.92 | — | hardware fsin via `if consteval` |
-| Angle::cos | 3.01 | — | hardware fcos via `if consteval` |
+| Vector3 dot | 0.70 | 0.51 | 1.4x |
+| Vector3 cross | 0.89 | 0.95 | **0.9x** |
+| Vector3 norm | 1.39 | 1.38 | 1.0x |
+| Vector3 normalized | 3.23 | 3.22 | 1.0x |
+| Matrix3 multiply | 4.05 | 3.03 | 1.3x |
+| Matrix3 inverse | 12.65 | 4.51 | 2.8x |
+| Matrix4 inverse | 37.92 | 11.03 | 3.4x |
+| Matrix4 multiply | 6.59 | 5.84 | 1.1x |
+| Quaternion multiply | 2.37 | 1.88 | 1.3x |
+| Quaternion*Vector3 | 6.01 | 2.68 | 2.2x |
+| slerp | 19.54 | 20.96 | **0.9x** |
+| quaternion_to_euler | 16.11 | 25.88 | **0.6x** |
+| Angle::sin | 3.92 | — | — |
+| Angle::cos | 3.01 | — | — |
 
-linalg3d trades SIMD-optimized matrix operations for compile-time evaluation (`constexpr` everywhere) and type safety. Trig-heavy operations (slerp, euler conversion) use `if consteval` to dispatch to `std::` math at runtime, matching hardware performance.
+Ratio = linalg3d / Eigen (lower is better for linalg3d; **bold** = linalg3d faster).
+
+### Performance summary vs Eigen
+
+- **On par (0.9-1.1x):** vector norm, normalized, add, scalar multiply, matrix transpose, matrix3/4 multiply — 8 of 14 operations within 10% of Eigen
+- **linalg3d faster:** cross product (0.9x), slerp (0.9x), quaternion-to-euler (0.6x)
+- **Eigen faster:** matrix inverse (2.8-3.4x, SIMD-specialized), quaternion*vector (2.2x, optimized rotation formula), dot product (1.4x, SIMD)
+- **Unique to linalg3d:** all operations are `constexpr` (Eigen has none), type-safe angles, `std::expected` error handling
 
 ```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Release
