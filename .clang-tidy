@@ -16,7 +16,12 @@ Checks: >-
   -bugprone-easily-swappable-parameters,
   -cppcoreguidelines-non-private-member-variables-in-classes,
   -performance-unnecessary-value-param,
-  -readability-redundant-access-specifiers
+  -readability-redundant-access-specifiers,
+  -readability-identifier-length,
+  -readability-avoid-nested-conditional-operator,
+  -modernize-avoid-c-arrays,
+  -cppcoreguidelines-avoid-c-arrays,
+  -performance-enum-size
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 CheckOptions:
