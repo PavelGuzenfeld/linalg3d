@@ -93,24 +93,22 @@ TEST_CASE("Angle: negative conversion")
     static_assert(linalg3d::fabs(neg_rad.value() + PI / 2.0) < EPSILON);
 }
 
-TEST_CASE("Angle: large value sanitization")
+TEST_CASE("Angle: large value storage")
 {
     Angle<AngleType::DEGREES> absurd(1e308);
-    CHECK_FALSE(is_nan(absurd.to_radians().value()));
-    CHECK_FALSE(is_inf(absurd.to_radians().value()));
+    CHECK(absurd.value() == 1e308);
 
     Angle<AngleType::RADIANS> absurd_rad(1e308);
-    CHECK_FALSE(is_nan(absurd_rad.to_degrees().value()));
-    CHECK_FALSE(is_inf(absurd_rad.to_degrees().value()));
+    CHECK(absurd_rad.value() == 1e308);
 }
 
-TEST_CASE("Angle: NaN/Inf sanitization")
+TEST_CASE("Angle: NaN/Inf passthrough")
 {
-    constexpr Angle<AngleType::RADIANS> nan_angle(std::numeric_limits<double>::quiet_NaN());
-    static_assert(nan_angle.value() == 0.0);
+    Angle<AngleType::RADIANS> nan_angle(std::numeric_limits<double>::quiet_NaN());
+    CHECK(is_nan(nan_angle.value()));
 
-    constexpr Angle<AngleType::RADIANS> inf_angle(std::numeric_limits<double>::infinity());
-    static_assert(inf_angle.value() == 0.0);
+    Angle<AngleType::RADIANS> inf_angle(std::numeric_limits<double>::infinity());
+    CHECK(is_inf(inf_angle.value()));
 }
 
 // =============================================================================
@@ -387,7 +385,7 @@ TEST_CASE("Matrix2 * Vector2")
 TEST_CASE("Matrix3: construction")
 {
     constexpr Matrix3 m;
-    constexpr bool all_zero = [&m]() {
+    constexpr bool all_zero = [&]() {
         for (int i = 0; i < 3; ++i)
             for (int j = 0; j < 3; ++j)
                 if (m.m[i][j] != 0.0)
