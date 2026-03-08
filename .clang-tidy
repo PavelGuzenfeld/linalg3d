@@ -13,6 +13,7 @@ Checks: >-
   -bugprone-exception-escape,
   -cppcoreguidelines-pro-bounds-constant-array-index,
   -cppcoreguidelines-avoid-magic-numbers,
+  -readability-magic-numbers,
   -bugprone-easily-swappable-parameters,
   -cppcoreguidelines-non-private-member-variables-in-classes,
   -performance-unnecessary-value-param,
@@ -25,8 +26,7 @@ Checks: >-
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 CheckOptions:
-  readability-magic-numbers.IgnoredFloatingPointValues: 'ALL'
-  readability-magic-numbers.IgnoredIntegerValues: 'ALL'
   readability-qualified-auto.AddConstToQualified: 'true'
   modernize-use-nodiscard.ReplacementString: '[[nodiscard]]'
+ExtraArgs: ['-std=c++23']
 FormatStyle: none
