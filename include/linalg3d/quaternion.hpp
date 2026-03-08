@@ -147,9 +147,9 @@ public:
     if (cos_theta > 0.9995)
     {
         const Quaternion result{a.w + t * (b_adj.w - a.w),
-                          a.x + t * (b_adj.x - a.x),
-                          a.y + t * (b_adj.y - a.y),
-                          a.z + t * (b_adj.z - a.z)};
+                                a.x + t * (b_adj.x - a.x),
+                                a.y + t * (b_adj.y - a.y),
+                                a.z + t * (b_adj.z - a.z)};
         return result.normalized();
     }
 
