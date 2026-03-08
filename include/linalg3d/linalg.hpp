@@ -7,7 +7,6 @@
 #include "vector2.hpp"
 #include "vector3.hpp"
 #include "vector4.hpp"
-#include <algorithm> // std::clamp
 
 namespace linalg3d
 {
@@ -39,7 +38,7 @@ namespace linalg3d
     [[nodiscard]] constexpr EulerAngles<AngleType::RADIANS> quaternion_to_euler_angles(const Quaternion &q) noexcept
     {
         return EulerAngles<AngleType::RADIANS>{
-            gcem::asin(std::clamp(2.0 * (q.w * q.y - q.z * q.x), -1.0, 1.0)),
+            gcem::asin(clamp(2.0 * (q.w * q.y - q.z * q.x), -1.0, 1.0)),
             gcem::atan2(2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z)),
             gcem::atan2(2.0 * (q.w * q.x + q.y * q.z), 1.0 - 2.0 * (q.x * q.x + q.y * q.y))};
     }
