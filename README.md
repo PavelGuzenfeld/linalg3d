@@ -113,6 +113,55 @@ cmake --build build --target linalg3d_bench
 ./build/linalg3d_bench
 ```
 
+## Examples
+
+### IMU attitude interpolation
+
+Smoothly interpolate between two IMU quaternion readings for sub-frame timing.
+
+```cpp
+#include <linalg3d/linalg.hpp>
+using namespace linalg3d;
+
+// Two IMU samples at different timestamps
+const Quaternion q_t0{0.998, 0.01, 0.02, 0.05};
+const Quaternion q_t1{0.997, 0.01, 0.03, 0.06};
+
+// Interpolate at 60% between the two samples
+auto q_mid = slerp(q_t0, q_t1, 0.6);
+
+// How far apart are these orientations?
+double delta = angle_between(q_t0, q_t1); // radians
+```
+
+### Rotating a body-frame vector to NED
+
+Convert a sensor reading from body frame to North-East-Down using an attitude quaternion.
+
+```cpp
+// Sensor reports acceleration in body frame
+constexpr Vector3 accel_body{0.1, -0.05, -9.81};
+
+// Current attitude from IMU (quaternion: w, x, y, z)
+const Quaternion attitude{0.998, 0.01, 0.02, 0.05};
+
+// Rotate to NED frame
+Vector3 accel_ned = attitude * accel_body;
+```
+
+### Compile-time coordinate transform validation
+
+Verify a rotation matrix at compile time -- errors caught before the code even runs.
+
+```cpp
+constexpr auto q = euler_angles_to_quaternion(EulerAngles{0.0, 0.0, PI / 2.0});
+constexpr auto mat = quaternion_to_matrix(q);
+constexpr auto v = mat * Vector3{1.0, 0.0, 0.0};
+// 90 deg yaw: x-axis maps to y-axis
+static_assert(fabs(v.x) < 1e-10);
+static_assert(fabs(v.y - 1.0) < 1e-10);
+```
+
 ## Build
 
 Requires CMake 3.25+ and a C++23 compiler. Dependencies (gcem, fmt, doctest, nanobench) are fetched automatically via FetchContent if not found on the system.
