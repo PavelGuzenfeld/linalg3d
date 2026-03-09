@@ -41,6 +41,13 @@ static_assert(inv.has_value());
 // SLERP interpolation
 constexpr auto mid = slerp(Quaternion::identity(), q, 0.5);
 
+// Angle between two vectors (radians)
+constexpr auto theta = angle_between(Vector3{1.0, 0.0, 0.0}, Vector3{0.0, 1.0, 0.0});
+static_assert(theta > 1.57 && theta < 1.58); // pi/2
+
+// Angle between two quaternion orientations (shortest arc, radians)
+auto rot_angle = angle_between(Quaternion::identity(), q);
+
 // 2D and 4D
 constexpr Vector2 v2{3.0, 4.0};
 static_assert(v2.norm_sq() == 25.0);
@@ -66,7 +73,7 @@ fmt::print("{}\n", Quaternion::identity());   // Quaternion(w=1, x=0, y=0, z=0)
 | `Matrix2` | `matrix2x2.hpp` | 2x2 matrix with inverse/determinant |
 | `Matrix3` | `matrix3x3.hpp` | 3x3 matrix with inverse/determinant |
 | `Matrix4` | `matrix4x4.hpp` | 4x4 matrix with inverse/determinant |
-| `Quaternion` | `quaternion.hpp` | Unit quaternion with rotation/SLERP |
+| `Quaternion` | `quaternion.hpp` | Unit quaternion with rotation/SLERP/angle |
 | `Angle<T>` | `angle.hpp` | Type-safe angle (radians/degrees) |
 | `EulerAngles<T>` | `euler_angles.hpp` | Pitch/yaw/roll triplet |
 

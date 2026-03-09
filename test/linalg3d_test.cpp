@@ -858,3 +858,71 @@ TEST_CASE("EulerAngles: from strong types to degrees")
     CHECK(nearly_equal(e.yaw.value(), 90.0));
     CHECK(nearly_equal(e.roll.value(), 90.0));
 }
+
+// =========================================================================
+// angle_between (Vector3)
+// =========================================================================
+
+TEST_CASE("angle_between vectors: same direction is zero")
+{
+    constexpr auto a = angle_between(Vector3{1.0, 0.0, 0.0}, Vector3{2.0, 0.0, 0.0});
+    static_assert(a < 1e-10);
+}
+
+TEST_CASE("angle_between vectors: opposite is pi")
+{
+    constexpr auto a = angle_between(Vector3{1.0, 0.0, 0.0}, Vector3{-1.0, 0.0, 0.0});
+    CHECK(nearly_equal(a, PI));
+}
+
+TEST_CASE("angle_between vectors: orthogonal is pi/2")
+{
+    constexpr auto a = angle_between(Vector3{1.0, 0.0, 0.0}, Vector3{0.0, 1.0, 0.0});
+    CHECK(nearly_equal(a, PI / 2.0));
+}
+
+TEST_CASE("angle_between vectors: 45 degrees")
+{
+    constexpr auto a = angle_between(Vector3{1.0, 0.0, 0.0}, Vector3{1.0, 1.0, 0.0});
+    CHECK(nearly_equal(a, PI / 4.0));
+}
+
+TEST_CASE("angle_between vectors: unnormalized inputs")
+{
+    constexpr auto a = angle_between(Vector3{3.0, 0.0, 0.0}, Vector3{0.0, 5.0, 0.0});
+    CHECK(nearly_equal(a, PI / 2.0));
+}
+
+// =========================================================================
+// angle_between (Quaternion)
+// =========================================================================
+
+TEST_CASE("angle_between quaternions: identity to identity is zero")
+{
+    constexpr auto a = angle_between(Quaternion::identity(), Quaternion::identity());
+    static_assert(a < 1e-10);
+}
+
+TEST_CASE("angle_between quaternions: 90 degree rotation")
+{
+    // 90° about Z: q = (cos(45°), 0, 0, sin(45°))
+    const auto q = Quaternion{std::cos(PI / 4.0), 0.0, 0.0, std::sin(PI / 4.0)};
+    const auto a = angle_between(Quaternion::identity(), q);
+    CHECK(nearly_equal(a, PI / 2.0));
+}
+
+TEST_CASE("angle_between quaternions: opposite quaternions represent same rotation")
+{
+    const auto q = Quaternion{std::cos(PI / 4.0), 0.0, 0.0, std::sin(PI / 4.0)};
+    const auto neg_q = Quaternion{-q.w, -q.x, -q.y, -q.z};
+    const auto a = angle_between(q, neg_q);
+    CHECK(nearly_equal(a, 0.0, 1e-10));
+}
+
+TEST_CASE("angle_between quaternions: 180 degree rotation")
+{
+    // 180° about Z: q = (0, 0, 0, 1)
+    const auto q = Quaternion{0.0, 0.0, 0.0, 1.0};
+    const auto a = angle_between(Quaternion::identity(), q);
+    CHECK(nearly_equal(a, PI));
+}

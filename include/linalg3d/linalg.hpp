@@ -101,4 +101,20 @@ template <AngleType T>
     return EulerAngles<AngleType::RADIANS>{vec.y, vec.z, vec.x};
 }
 
+// --- Angle between vectors/quaternions ---
+
+/// Angle (radians) between two Vector3 directions.
+[[nodiscard]] constexpr double angle_between(const Vector3 &a, const Vector3 &b) noexcept
+{
+    const double d = a.normalized().dot(b.normalized());
+    return ce_acos(clamp(d, -1.0, 1.0));
+}
+
+/// Angle (radians) between two unit quaternion orientations (shortest arc).
+[[nodiscard]] constexpr double angle_between(const Quaternion &a, const Quaternion &b) noexcept
+{
+    const double d = a.dot(b);
+    return 2.0 * ce_acos(clamp(fabs(d), 0.0, 1.0));
+}
+
 } // namespace linalg3d
