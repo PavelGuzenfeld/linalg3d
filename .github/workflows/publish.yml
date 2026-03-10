@@ -29,6 +29,7 @@ jobs:
     name: Build wheels (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-24.04, macos-latest, windows-latest]
     steps:
@@ -37,8 +38,10 @@ jobs:
         with:
           package-dir: python
         env:
-          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-*"
-          CIBW_SKIP: "*-musllinux_*"
+          CIBW_BUILD: "cp311-* cp312-* cp313-*"
+          CIBW_SKIP: "*-musllinux_* *-win32 *-manylinux_i686"
+          CIBW_ENVIRONMENT: "CMAKE_ARGS='-DCMAKE_CXX_STANDARD=23'"
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           CIBW_TEST_REQUIRES: pytest numpy scipy hypothesis
           CIBW_TEST_COMMAND: pytest {project}/python/tests -v --tb=short -x
       - uses: actions/upload-artifact@v4
