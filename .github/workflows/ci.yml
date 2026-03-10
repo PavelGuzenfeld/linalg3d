@@ -22,6 +22,7 @@ jobs:
             compiler: clang-18
             cc: clang-18
             cxx: clang++-18
+            extra_cxx_flags: "-stdlib=libc++"
           - os: macos-latest
             compiler: apple-clang
             cc: clang
@@ -46,7 +47,8 @@ jobs:
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=${{ matrix.cc }} \
-            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
+            ${{ matrix.extra_cxx_flags && format('-DCMAKE_CXX_FLAGS="{0}"', matrix.extra_cxx_flags) || '' }}
 
       - name: Build
         run: cmake --build build -j$(nproc 2>/dev/null || sysctl -n hw.ncpu)
@@ -97,6 +99,9 @@ jobs:
 
       - name: Install package
         run: pip install "./python[test]"
+        env:
+          CC: ${{ runner.os == 'Linux' && 'gcc-14' || 'clang' }}
+          CXX: ${{ runner.os == 'Linux' && 'g++-14' || 'clang++' }}
 
       - name: Run tests
         run: pytest python/tests/ -v --tb=short
@@ -118,10 +123,12 @@ jobs:
         with:
           package-dir: python
         env:
-          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-*"
-          CIBW_SKIP: "*-musllinux_*"
+          CIBW_BUILD: "cp311-* cp312-* cp313-*"
+          CIBW_SKIP: "*-musllinux_* *-win32 *-manylinux_i686"
+          CIBW_ENVIRONMENT: "CMAKE_ARGS='-DCMAKE_CXX_STANDARD=23'"
           CIBW_TEST_REQUIRES: pytest numpy scipy hypothesis
           CIBW_TEST_COMMAND: pytest {project}/python/tests -v --tb=short
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
 
       - uses: actions/upload-artifact@v4
         with:
