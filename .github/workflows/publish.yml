@@ -39,25 +39,22 @@ jobs:
           python-version: "3.12"
       - name: Install cibuildwheel
         run: pip install cibuildwheel==2.21.3
-      - name: Build wheels (with retry)
+      - name: Pre-cache virtualenv (avoid GitHub 429)
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          for attempt in 1 2 3; do
-            echo "::group::Attempt $attempt"
-            if cibuildwheel --output-dir wheelhouse python; then
-              echo "::endgroup::"
-              echo "Success on attempt $attempt"
-              break
-            fi
-            echo "::endgroup::"
-            if [ "$attempt" -lt 3 ]; then
-              echo "Attempt $attempt failed, retrying in 60s..."
-              sleep 60
-            else
-              echo "All attempts failed"
-              exit 1
-            fi
-          done
+          CACHE_DIR=$(python -c "from platformdirs import user_cache_path; print(user_cache_path('cibuildwheel', 'pypa'))")
+          mkdir -p "$CACHE_DIR"
+          if [ ! -f "$CACHE_DIR/virtualenv-20.26.6.pyz" ]; then
+            curl -sL --retry 3 --retry-delay 10 \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              "https://github.com/pypa/get-virtualenv/raw/20.26.6/public/virtualenv.pyz" \
+              -o "$CACHE_DIR/virtualenv-20.26.6.pyz"
+          fi
+      - name: Build wheels
+        shell: bash
+        run: cibuildwheel --output-dir wheelhouse python
         env:
           CIBW_BUILD: "cp311-* cp312-* cp313-*"
           CIBW_SKIP: "*-musllinux_* *-win32 *-manylinux_i686"
