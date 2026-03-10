@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.25)
-project(linalg3d VERSION 0.2.0 LANGUAGES CXX)
+
+# Allow FetchContent deps with old cmake_minimum_required (e.g. gcem)
+if(POLICY CMP0178)
+    cmake_policy(SET CMP0178 OLD)
+endif()
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "" FORCE)
+
+project(linalg3d VERSION 0.3.0 LANGUAGES CXX)
 
 # Require C++23
 set(CMAKE_CXX_STANDARD 23)
