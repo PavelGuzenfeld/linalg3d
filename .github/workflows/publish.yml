@@ -52,6 +52,7 @@ jobs:
   publish:
     name: Publish to PyPI
     needs: [build-sdist, build-wheels]
+    if: always() && needs.build-sdist.result == 'success'
     runs-on: ubuntu-24.04
     environment: pypi
     steps:
