@@ -1,0 +1,49 @@
+[build-system]
+requires = ["scikit-build-core>=0.10", "nanobind>=2.4"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "linalg3d"
+version = "0.2.0"
+description = "Fast constexpr linear algebra for C++23 with zero-copy NumPy/SciPy interop"
+readme = "../README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [{name = "Pavel Guzenfeld"}]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
+]
+dependencies = ["numpy>=1.21"]
+
+[project.optional-dependencies]
+scipy = ["scipy>=1.7"]
+test = [
+    "pytest>=7.0",
+    "hypothesis>=6.0",
+    "numpy>=1.21",
+    "scipy>=1.7",
+]
+
+[project.urls]
+Homepage = "https://github.com/PavelGuzenfeld/linalg3d"
+Repository = "https://github.com/PavelGuzenfeld/linalg3d"
+
+[tool.scikit-build]
+cmake.source-dir = "."
+cmake.build-type = "Release"
+cmake.args = ["-DCMAKE_CXX_STANDARD=23"]
+wheel.packages = ["linalg3d"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

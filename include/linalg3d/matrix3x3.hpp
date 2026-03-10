@@ -1,5 +1,6 @@
 #pragma once
 #include "constexpr_math.hpp"
+#include "simd.hpp"
 #include <expected>
 
 namespace linalg3d
@@ -42,22 +43,32 @@ public:
 
     [[nodiscard]] constexpr std::expected<Matrix3, MatrixError> inverse() const noexcept
     {
-        const double det = determinant();
-        if (det == 0.0)
-            return std::unexpected{MatrixError::singular};
+        if consteval
+        {
+            const double det = determinant();
+            if (det == 0.0)
+                return std::unexpected{MatrixError::singular};
 
-        const double inv_det = 1.0 / det;
-        return Matrix3{(m[1][1] * m[2][2] - m[1][2] * m[2][1]) * inv_det,
-                       (m[0][2] * m[2][1] - m[0][1] * m[2][2]) * inv_det,
-                       (m[0][1] * m[1][2] - m[0][2] * m[1][1]) * inv_det,
+            const double inv_det = 1.0 / det;
+            return Matrix3{(m[1][1] * m[2][2] - m[1][2] * m[2][1]) * inv_det,
+                           (m[0][2] * m[2][1] - m[0][1] * m[2][2]) * inv_det,
+                           (m[0][1] * m[1][2] - m[0][2] * m[1][1]) * inv_det,
 
-                       (m[1][2] * m[2][0] - m[1][0] * m[2][2]) * inv_det,
-                       (m[0][0] * m[2][2] - m[0][2] * m[2][0]) * inv_det,
-                       (m[0][2] * m[1][0] - m[0][0] * m[1][2]) * inv_det,
+                           (m[1][2] * m[2][0] - m[1][0] * m[2][2]) * inv_det,
+                           (m[0][0] * m[2][2] - m[0][2] * m[2][0]) * inv_det,
+                           (m[0][2] * m[1][0] - m[0][0] * m[1][2]) * inv_det,
 
-                       (m[1][0] * m[2][1] - m[1][1] * m[2][0]) * inv_det,
-                       (m[0][1] * m[2][0] - m[0][0] * m[2][1]) * inv_det,
-                       (m[0][0] * m[1][1] - m[0][1] * m[1][0]) * inv_det};
+                           (m[1][0] * m[2][1] - m[1][1] * m[2][0]) * inv_det,
+                           (m[0][1] * m[2][0] - m[0][0] * m[2][1]) * inv_det,
+                           (m[0][0] * m[1][1] - m[0][1] * m[1][0]) * inv_det};
+        }
+        else
+        {
+            Matrix3 result;
+            if (!simd::mat3_inverse(m, result.m))
+                return std::unexpected{MatrixError::singular};
+            return result;
+        }
     }
 
     [[nodiscard]] constexpr bool operator==(const Matrix3 &other) const noexcept
@@ -115,17 +126,26 @@ public:
 
     [[nodiscard]] constexpr Matrix3 operator*(const Matrix3 &other) const noexcept
     {
-        return Matrix3{m[0][0] * other.m[0][0] + m[0][1] * other.m[1][0] + m[0][2] * other.m[2][0],
-                       m[0][0] * other.m[0][1] + m[0][1] * other.m[1][1] + m[0][2] * other.m[2][1],
-                       m[0][0] * other.m[0][2] + m[0][1] * other.m[1][2] + m[0][2] * other.m[2][2],
+        if consteval
+        {
+            return Matrix3{m[0][0] * other.m[0][0] + m[0][1] * other.m[1][0] + m[0][2] * other.m[2][0],
+                           m[0][0] * other.m[0][1] + m[0][1] * other.m[1][1] + m[0][2] * other.m[2][1],
+                           m[0][0] * other.m[0][2] + m[0][1] * other.m[1][2] + m[0][2] * other.m[2][2],
 
-                       m[1][0] * other.m[0][0] + m[1][1] * other.m[1][0] + m[1][2] * other.m[2][0],
-                       m[1][0] * other.m[0][1] + m[1][1] * other.m[1][1] + m[1][2] * other.m[2][1],
-                       m[1][0] * other.m[0][2] + m[1][1] * other.m[1][2] + m[1][2] * other.m[2][2],
+                           m[1][0] * other.m[0][0] + m[1][1] * other.m[1][0] + m[1][2] * other.m[2][0],
+                           m[1][0] * other.m[0][1] + m[1][1] * other.m[1][1] + m[1][2] * other.m[2][1],
+                           m[1][0] * other.m[0][2] + m[1][1] * other.m[1][2] + m[1][2] * other.m[2][2],
 
-                       m[2][0] * other.m[0][0] + m[2][1] * other.m[1][0] + m[2][2] * other.m[2][0],
-                       m[2][0] * other.m[0][1] + m[2][1] * other.m[1][1] + m[2][2] * other.m[2][1],
-                       m[2][0] * other.m[0][2] + m[2][1] * other.m[1][2] + m[2][2] * other.m[2][2]};
+                           m[2][0] * other.m[0][0] + m[2][1] * other.m[1][0] + m[2][2] * other.m[2][0],
+                           m[2][0] * other.m[0][1] + m[2][1] * other.m[1][1] + m[2][2] * other.m[2][1],
+                           m[2][0] * other.m[0][2] + m[2][1] * other.m[1][2] + m[2][2] * other.m[2][2]};
+        }
+        else
+        {
+            Matrix3 result;
+            simd::mat3_multiply(m, other.m, result.m);
+            return result;
+        }
     }
 
     [[nodiscard]] constexpr Matrix3 operator/(double scalar) const noexcept

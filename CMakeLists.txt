@@ -117,10 +117,18 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     linalg3d_set_warnings(${PROJECT_NAME}_test)
     add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
 
+    # Enable native SIMD for tests and benchmarks
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(${PROJECT_NAME}_test PRIVATE -march=native)
+    endif()
+
     # Benchmarks
     add_executable(${PROJECT_NAME}_bench bench/${PROJECT_NAME}_bench.cpp)
     target_link_libraries(${PROJECT_NAME}_bench PRIVATE ${PROJECT_NAME} gcem nanobench::nanobench Eigen3::Eigen)
     linalg3d_set_warnings(${PROJECT_NAME}_bench)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(${PROJECT_NAME}_bench PRIVATE -march=native)
+    endif()
 endif()
 
 # Handle "Manually-specified variables were not used by the project" warning.
