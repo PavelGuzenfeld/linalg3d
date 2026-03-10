@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "linalg3d"
-version = "0.3.1"
+version = "0.3.2"
 description = "Fast constexpr linear algebra for C++23 with zero-copy NumPy/SciPy interop"
 readme = "../README.md"
 license = "MIT"
