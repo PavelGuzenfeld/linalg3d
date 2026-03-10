@@ -4,7 +4,9 @@ Header-only constexpr linear algebra library for C++23. Provides type-safe 2D, 3
 
 ## Features
 
-- **Fully constexpr** — all operations evaluate at compile time via [gcem](https://github.com/kthohr/gcem), with `if consteval` dispatch to `std::` math at runtime for hardware-accelerated performance
+- **Fully constexpr** — all operations evaluate at compile time via [gcem](https://github.com/kthohr/gcem), with `if consteval` dispatch to `std::` math and SIMD at runtime
+- **SIMD optimized** — SSE2/AVX/FMA (x86) and NEON (ARM) intrinsics for matrix multiply/inverse via automatic `if consteval` dispatch
+- **Python bindings** — [nanobind](https://github.com/wjakob/nanobind)-based package with zero-copy NumPy and SciPy interop
 - **Type-safe angles** — `Angle<RADIANS>` vs `Angle<DEGREES>` prevents unit-mismatch bugs at the type level
 - **2D, 3D, 4D** — `Vector2`/`Matrix2`, `Vector3`/`Matrix3`, `Vector4`/`Matrix4`
 - **Quaternions** — multiplication, rotation, SLERP interpolation, Euler angle conversion
@@ -79,33 +81,34 @@ fmt::print("{}\n", Quaternion::identity());   // Quaternion(w=1, x=0, y=0, z=0)
 
 ## Benchmarks
 
-Measured with [nanobench](https://github.com/martinus/nanobench) (GCC 14, `-O2`, Ubuntu 24.04). Compared against [Eigen 3.4](https://eigen.tuxfamily.org/) on equivalent operations:
+Measured with [nanobench](https://github.com/martinus/nanobench) (GCC 14, `-O3 -march=native`, Ubuntu 24.04). Compared against [Eigen 3.4](https://eigen.tuxfamily.org/) on equivalent operations:
 
 | Operation | linalg3d (ns) | Eigen (ns) | Ratio |
 |---|---|---|---|
-| Vector3 dot | 0.69 | 0.51 | 1.4x |
-| Vector3 cross | 0.84 | 0.98 | **0.9x** |
-| Vector3 norm | 1.35 | 1.36 | **1.0x** |
-| Vector3 normalized | 3.15 | 3.14 | 1.0x |
-| Matrix3 multiply | 3.99 | 2.95 | 1.4x |
-| Matrix3 inverse | 12.63 | 4.44 | 2.8x |
-| Matrix4 inverse | 37.92 | 11.09 | 3.4x |
-| Matrix4 multiply | 6.45 | 6.31 | 1.0x |
-| Quaternion multiply | 2.34 | 1.92 | 1.2x |
-| Quaternion*Vector3 | 2.42 | 2.62 | **0.9x** |
-| slerp | 19.41 | 20.50 | **0.9x** |
-| quaternion_to_euler | 15.81 | 25.12 | **0.6x** |
-| Angle::sin | 3.96 | — | — |
-| Angle::cos | 2.97 | — | — |
+| Vector3 dot | 0.76 | 0.54 | 1.4x |
+| Vector3 cross | 0.80 | 0.96 | **0.8x** |
+| Vector3 norm | 1.49 | 1.49 | **1.0x** |
+| Vector3 normalized | 3.50 | 3.48 | 1.0x |
+| Matrix3 multiply | 3.60 | 2.64 | 1.4x |
+| Matrix3 inverse | 7.11 | 7.23 | **0.98x** |
+| Matrix4 inverse | 14.78 | 10.72 | 1.4x |
+| Matrix4 multiply | 2.90 | 2.50 | 1.2x |
+| Quaternion multiply | 1.75 | 1.21 | 1.4x |
+| Quaternion inverse | 2.02 | 8.77 | **0.23x** |
+| Quaternion*Vector3 | 2.01 | 2.42 | **0.8x** |
+| slerp | 21.16 | 22.12 | **0.96x** |
+| quaternion_to_euler | 18.80 | 26.67 | **0.7x** |
+| Angle::sin | 4.22 | — | — |
+| Angle::cos | 3.23 | — | — |
 
 Ratio = linalg3d / Eigen (lower is better for linalg3d; **bold** = linalg3d wins).
 
 ### Performance summary vs Eigen
 
-- **On par (0.9-1.1x):** vector norm, normalized, add, scalar multiply, matrix transpose, matrix4 multiply, quaternion inverse — 9 of 14 operations within 10% of Eigen
-- **linalg3d faster:** cross product (0.9x), quaternion*vector rotation (0.9x), slerp (0.9x), quaternion-to-euler (0.6x)
-- **Eigen faster:** matrix inverse (2.8-3.4x, SIMD-specialized), matrix3 multiply (1.4x), dot product (1.4x)
-- **Unique to linalg3d:** all operations are `constexpr` (Eigen has none), type-safe angles, `std::expected` error handling
+- **linalg3d faster:** Matrix3 inverse (0.98x), quaternion inverse (4.3x faster), cross product (0.8x), quaternion*vector (0.8x), slerp (0.96x), quaternion-to-euler (0.7x)
+- **On par (0.9-1.2x):** vector norm, normalized, add, matrix transpose, matrix4 multiply
+- **Eigen faster:** matrix3 multiply (1.4x), matrix4 inverse (1.4x), quaternion multiply (1.4x), dot product (1.4x)
+- **Unique to linalg3d:** all operations are `constexpr` (Eigen has none), type-safe angles, `std::expected` error handling, SIMD dispatched via `if consteval`
 
 ```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Release
@@ -162,7 +165,57 @@ static_assert(fabs(v.x) < 1e-10);
 static_assert(fabs(v.y - 1.0) < 1e-10);
 ```
 
-## Build
+## Python
+
+### Installation
+
+```bash
+pip install linalg3d
+```
+
+Or build from source:
+
+```bash
+pip install "./python[test]"
+```
+
+### Python usage
+
+```python
+from linalg3d import Vector3, Matrix3, Quaternion, slerp
+import numpy as np
+
+# Vectors
+v = Vector3(1.0, 2.0, 3.0)
+print(v.norm(), v.normalized())
+
+# Zero-copy NumPy interop — no data copying
+arr = np.asarray(v.numpy())     # shares memory with v
+arr[0] = 99.0
+assert v.x == 99.0              # modification reflected
+
+# Matrices
+m = Matrix3.identity()
+arr = np.asarray(m.numpy())     # zero-copy 3x3 view
+det = m.determinant()
+inv = m.inverse()               # returns None if singular
+
+# Quaternion rotation
+import math
+q = Quaternion(math.cos(math.pi/4), 0, 0, math.sin(math.pi/4))
+rotated = q.rotate(Vector3(1, 0, 0))
+
+# SLERP
+mid = slerp(Quaternion(), q, 0.5)
+
+# SciPy interop (convention: [x, y, z, w])
+from scipy.spatial.transform import Rotation
+scipy_arr = np.asarray(q.to_scipy())   # [x,y,z,w]
+rot = Rotation.from_quat(scipy_arr)
+q2 = Quaternion.from_scipy(scipy_arr)  # back to linalg3d
+```
+
+## Build (C++)
 
 Requires CMake 3.25+ and a C++23 compiler. Dependencies (gcem, fmt, doctest, nanobench) are fetched automatically via FetchContent if not found on the system.
 

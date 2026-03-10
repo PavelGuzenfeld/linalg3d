@@ -36,3 +36,11 @@ build/
 
 # Build
 build*/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+wheelhouse/
+.hypothesis/

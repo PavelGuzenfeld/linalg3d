@@ -3,6 +3,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     g++-14 gcc-14 cmake make \
     clang-tidy clang-format cppcheck iwyu \
     libfmt-dev \
+    python3 python3-pip python3-dev python3-venv \
     git ca-certificates \
   && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100 \
   && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100 \

@@ -2,6 +2,7 @@
 #include "constexpr_math.hpp"
 #include "euler_angles.hpp"
 #include "matrix3x3.hpp"
+#include "simd.hpp"
 #include "vector3.hpp"
 
 namespace linalg3d
