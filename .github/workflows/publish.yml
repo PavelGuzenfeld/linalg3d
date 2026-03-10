@@ -34,9 +34,30 @@ jobs:
         os: [ubuntu-24.04, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
-      - uses: pypa/cibuildwheel@v2.21
+      - uses: actions/setup-python@v5
         with:
-          package-dir: python
+          python-version: "3.12"
+      - name: Install cibuildwheel
+        run: pip install cibuildwheel==2.21.3
+      - name: Build wheels (with retry)
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            echo "::group::Attempt $attempt"
+            if cibuildwheel --output-dir wheelhouse python; then
+              echo "::endgroup::"
+              echo "Success on attempt $attempt"
+              break
+            fi
+            echo "::endgroup::"
+            if [ "$attempt" -lt 3 ]; then
+              echo "Attempt $attempt failed, retrying in 60s..."
+              sleep 60
+            else
+              echo "All attempts failed"
+              exit 1
+            fi
+          done
         env:
           CIBW_BUILD: "cp311-* cp312-* cp313-*"
           CIBW_SKIP: "*-musllinux_* *-win32 *-manylinux_i686"
