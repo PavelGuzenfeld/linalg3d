@@ -1,5 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
+#include <numbers>
 
 #include <linalg3d/linalg.hpp>
 
@@ -57,10 +58,7 @@ Matrix3 random_invertible_matrix3()
     // Random matrix with determinant check
     for (int attempt = 0; attempt < 100; ++attempt)
     {
-        Matrix3 m{
-            dist(rng), dist(rng), dist(rng),
-            dist(rng), dist(rng), dist(rng),
-            dist(rng), dist(rng), dist(rng)};
+        Matrix3 m{dist(rng), dist(rng), dist(rng), dist(rng), dist(rng), dist(rng), dist(rng), dist(rng), dist(rng)};
         auto det = m.determinant();
         if (std::abs(det) > 1e-6)
         {
@@ -353,9 +351,7 @@ TEST_CASE("Cross-validate Matrix3 — determinant matches Eigen")
         double our_det = m.determinant();
 
         Eigen::Matrix3d em;
-        em << m.m[0][0], m.m[0][1], m.m[0][2],
-              m.m[1][0], m.m[1][1], m.m[1][2],
-              m.m[2][0], m.m[2][1], m.m[2][2];
+        em << m.m[0][0], m.m[0][1], m.m[0][2], m.m[1][0], m.m[1][1], m.m[1][2], m.m[2][0], m.m[2][1], m.m[2][2];
         double eigen_det = em.determinant();
 
         CHECK(our_det == doctest::Approx(eigen_det).epsilon(1e-3));
@@ -375,9 +371,7 @@ TEST_CASE("Cross-validate Matrix3 — inverse matches Eigen")
         }
 
         Eigen::Matrix3d em;
-        em << m.m[0][0], m.m[0][1], m.m[0][2],
-              m.m[1][0], m.m[1][1], m.m[1][2],
-              m.m[2][0], m.m[2][1], m.m[2][2];
+        em << m.m[0][0], m.m[0][1], m.m[0][2], m.m[1][0], m.m[1][1], m.m[1][2], m.m[2][0], m.m[2][1], m.m[2][2];
         Eigen::Matrix3d eigen_inv = em.inverse();
 
         auto &oi = our_inv.value();
@@ -455,8 +449,8 @@ TEST_CASE("Edge — identity quaternion preserves vector")
 TEST_CASE("Edge — 90 degree rotation around Z axis")
 {
     // q = cos(45°) + sin(45°) * k
-    double s = std::sin(M_PI / 4.0);
-    double c = std::cos(M_PI / 4.0);
+    double s = std::sin(std::numbers::pi / 4.0);
+    double c = std::cos(std::numbers::pi / 4.0);
     Quaternion q{c, 0, 0, s};
     Vector3 v{1, 0, 0};
     auto rotated = q * v;
@@ -485,5 +479,5 @@ TEST_CASE("Angle — 180 degrees == pi radians")
 {
     Angle<DEGREES> deg{180.0};
     auto rad = deg.to_radians();
-    CHECK(rad.value() == doctest::Approx(M_PI).epsilon(1e-12));
+    CHECK(rad.value() == doctest::Approx(std::numbers::pi).epsilon(1e-12));
 }
