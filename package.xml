@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="3">
   <name>linalg3d</name>
-  <version>0.2.0</version>
+  <version>0.4.0</version>
   <description>Constexpr linear algebra for 2D, 3D, and 4D calculations in C++23</description>
   <maintainer email="me@pavelguzenfeld.com">Pavel Guzenfeld</maintainer>
   <license>MIT</license>
