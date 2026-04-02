@@ -127,9 +127,16 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     linalg3d_set_warnings(${PROJECT_NAME}_test)
     add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
 
+    # Math verification tests (property-based + cross-validation against Eigen)
+    add_executable(${PROJECT_NAME}_math_verify test/math_verification_test.cpp)
+    target_link_libraries(${PROJECT_NAME}_math_verify PRIVATE ${PROJECT_NAME} gcem doctest::doctest Eigen3::Eigen)
+    linalg3d_set_warnings(${PROJECT_NAME}_math_verify)
+    add_test(NAME ${PROJECT_NAME}_math_verify COMMAND ${PROJECT_NAME}_math_verify)
+
     # Enable native SIMD for tests and benchmarks
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         target_compile_options(${PROJECT_NAME}_test PRIVATE -march=native)
+        target_compile_options(${PROJECT_NAME}_math_verify PRIVATE -march=native)
     endif()
 
     # Benchmarks
