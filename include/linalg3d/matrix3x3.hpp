@@ -200,4 +200,7 @@ public:
     }
 };
 
+
+static_assert(std::is_trivially_copyable_v<Matrix3>, "Matrix3 must be trivially copyable");
+static_assert(std::is_standard_layout_v<Matrix3>, "Matrix3 must be standard layout");
 } // namespace linalg3d

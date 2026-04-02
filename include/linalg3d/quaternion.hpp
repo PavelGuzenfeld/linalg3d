@@ -166,4 +166,7 @@ public:
                       wa * a.z + wb * b_adj.z};
 }
 
+static_assert(std::is_trivially_copyable_v<Quaternion>, "Quaternion must be trivially copyable");
+static_assert(std::is_standard_layout_v<Quaternion>, "Quaternion must be standard layout");
+
 } // namespace linalg3d
