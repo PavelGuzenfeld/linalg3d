@@ -142,4 +142,8 @@ struct Vector3
     }
 };
 
+// Type trait guarantees for SoA / GPU / memcpy safety
+static_assert(std::is_trivially_copyable_v<Vector3>, "Vector3 must be trivially copyable");
+static_assert(std::is_standard_layout_v<Vector3>, "Vector3 must be standard layout");
+
 } // namespace linalg3d

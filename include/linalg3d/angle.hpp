@@ -10,6 +10,10 @@ enum class AngleType
     DEGREES
 };
 
+// Namespace-level aliases for convenience
+constexpr auto RADIANS = AngleType::RADIANS;
+constexpr auto DEGREES = AngleType::DEGREES;
+
 template <AngleType T = AngleType::RADIANS>
 class Angle
 {

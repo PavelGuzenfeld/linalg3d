@@ -111,4 +111,7 @@ struct Vector2
     }
 };
 
+
+static_assert(std::is_trivially_copyable_v<Vector2>, "Vector2 must be trivially copyable");
+static_assert(std::is_standard_layout_v<Vector2>, "Vector2 must be standard layout");
 } // namespace linalg3d

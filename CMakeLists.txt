@@ -63,6 +63,9 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:include>
 )
 
+# Transitive dependencies — consumers get gcem automatically
+target_link_libraries(${PROJECT_NAME} INTERFACE gcem)
+
 # Install public headers
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
