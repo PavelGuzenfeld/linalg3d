@@ -38,6 +38,8 @@ test = [
 [project.urls]
 Homepage = "https://github.com/PavelGuzenfeld/linalg3d"
 Repository = "https://github.com/PavelGuzenfeld/linalg3d"
+Blog = "https://pavelguzenfeld.com/posts/eigen-stable-norm/"
+Author = "https://pavelguzenfeld.com"
 
 [tool.scikit-build]
 cmake.source-dir = "."
